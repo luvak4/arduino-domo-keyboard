@@ -5,7 +5,7 @@ const int led_pin = 13;
 const int transmit_pin = 12;
 const int receive_pin = 11;
 // IR
-const int RECV_PIN = 11;
+const int RECV_PIN = 2;
 IRrecv irrecv(RECV_PIN);
 const long responseA[]={16753245,16736925,16769565,\
 			16720605,16712445,16761405,\

@@ -1,7 +1,7 @@
 #include <IRremote.h>        // load ir library
 #include <VirtualWire.h>     // load virtual-wire library
 const int led_pin = 13;      // led pin
-const int receive_pin = 11;  // radio rx pin
+//const int receive_pin = 11;  // radio rx pin
 const int transmit_pin = 12; // radio tx pin
 const int MSG_LEN = 7;       // radio max message lenght
 const int RECV_PIN = 2;      // ir pin
@@ -21,9 +21,9 @@ void setup()
 {
   pinMode(led_pin, OUTPUT);    // led set pin
   vw_set_tx_pin(transmit_pin); // radio set tx pin
-  vw_set_rx_pin(receive_pin);  // radio set rx pin
+  //vw_set_rx_pin(receive_pin);  // radio set rx pin
   vw_setup(2000);              // radio speed
-  vw_rx_start();               // radio rx ON
+  //vw_rx_start();               // radio rx ON
   irrecv.enableIRIn();         // ir rx ON
 }
 

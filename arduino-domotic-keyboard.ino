@@ -7,7 +7,7 @@ const int MSG_LEN = 7;       // radio max message lenght
 const int RECV_PIN = 2;      // ir pin
 IRrecv irrecv(RECV_PIN);     // ir initialize library
 decode_results results;      // ir variable
-const long responseA[]={16753245,16736925,16769565,\ // codes keys
+const long responseA[]={16753245,16736925,16769565,\
 			16720605,16712445,16761405,\
 			16769055,16754775,16748655,\
 			16738455,16750695,16756815,\
@@ -25,6 +25,7 @@ void setup()
   vw_setup(2000);              // radio speed
   //vw_rx_start();               // radio rx ON
   irrecv.enableIRIn();         // ir rx ON
+  Serial.begin(9600);
 }
 
 ////////////////////////////////
@@ -52,6 +53,7 @@ byte ir_decode(decode_results *results){
 }
 
 void txPulsantePremuto(byte nPushButton){
+  Serial.println("yes");
   char msg[MSG_LEN] = {0xAA,0,0,0,0,0,0};  // initialize msg
   msg[1]=nPushButton;                      // set byte
   vw_send((uint8_t *)msg,MSG_LEN);         // send to tx-radio

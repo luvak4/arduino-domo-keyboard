@@ -22,7 +22,7 @@ void setup()
   pinMode(led_pin, OUTPUT);    // led set pin
   vw_set_tx_pin(transmit_pin); // radio set tx pin
   //vw_set_rx_pin(receive_pin);  // radio set rx pin
-  vw_setup(2000);              // radio speed
+  vw_setup(1000);              // radio speed
   //vw_rx_start();               // radio rx ON
   irrecv.enableIRIn();         // ir rx ON
   //Serial.begin(9600);
@@ -34,7 +34,8 @@ void setup()
 void loop(){
   if (irrecv.decode(&results)) {        // got ir signal
     byte irCommand=ir_decode(&results); // usable?
-    if (irCommand>0){                   // yes
+    if (irCommand>0){
+      delay(100);
       txPulsantePremuto(irCommand);	// transmit via radio
     }
     irrecv.resume();                    // ir-receive resume
@@ -55,7 +56,9 @@ byte ir_decode(decode_results *results){
 void txPulsantePremuto(byte nPushButton){
   //Serial.println("yes");
   char msg[MSG_LEN] = {0xAA,0,0,0,0,0,0};  // initialize msg
-  msg[1]=nPushButton;                      // set byte
+  msg[1]=nPushButton;
+  digitalWrite(led_pin,HIGH);
   vw_send((uint8_t *)msg,MSG_LEN);         // send to tx-radio
-  vw_wait_tx();                            // wait until message is gone
+  vw_wait_tx();
+  digitalWrite(led_pin,LOW);
 }

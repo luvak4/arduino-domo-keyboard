@@ -14,6 +14,11 @@ const long responseA[]={16753245,16736925,16769565,\
 			16724175,16718055,16743045,\
 			16716015,16726215,16734885,\
 			16728765,16730805,16732845};
+const char NUMERO[]={'0','1','2','3','4','5','6','7','8','9'};
+const byte KEY_OK = 21;
+const char SEQUENZA[]={0,0,0,0};
+byte cifra=0;
+unsigned long tempo=0;
 ////////////////////////////////
 // setup
 ////////////////////////////////
@@ -33,10 +38,48 @@ void setup()
 ////////////////////////////////
 void loop(){
   if (irrecv.decode(&results)) {        // got ir signal
-    byte irCommand=ir_decode(&results); // usable?
-    if (irCommand>0){
+    byte key=ir_decode(&results); // usable?
+    if (key>0){
+      //
       delay(100);
-      txPulsantePremuto(irCommand);	// transmit via radio
+      tempo=millis();
+      //
+      if (key==KEY_OK){
+	//////////////////////////////////
+	char msg[MSG_LEN] = {0xAA,0,0,0,0,0,0};  // initialize msg
+	msg[1]=SEQUENZA[0];
+	msg[2]=SEQUENZA[1];
+	msg[3]=SEQUENZA[2];
+	msg[4]=SEQUENZA[3];
+	digitalWrite(led_pin,HIGH);
+	vw_send((uint8_t *)msg,MSG_LEN);         // send to tx-radio
+	vw_wait_tx();
+	digitalWrite(led_pin,LOW);
+	//////////////////////////////////
+	resetSEQUENZA();
+      } else {
+	if (key > 10){
+	  // exit
+	} else {
+	  // compone il numero
+	  SEQUENZA[cifra]=NUMERI[key-1];
+	  if (cifra > 3){
+	    // massimo 4 cifre
+	    resetSEQUENZA();
+	  } else {
+	    cifra+=1;
+	  }
+	}
+      }
+    } else {
+      // dopo un certo numero di secondi
+      // resetta la composizone del numero
+      if (tempo > 0){
+	if (millis()-tempo > 5000){
+	  resetSEQUENZA();
+	  tempo=0;
+	}
+      }
     }
     irrecv.resume();                    // ir-receive resume
   }
@@ -44,21 +87,21 @@ void loop(){
 
 byte ir_decode(decode_results *results){
   long keyLongNumber = results->value;  // get the long number
+  //Serial.println(keyLongNumber);
   byte key=0;
   for (byte r=0; r<21 ; r++){           // search in array
     if (responseA[r]==keyLongNumber){   // found?
       key=r+1;                          // key in 1-21 range
+      break;
     }
   }
   return key;                           // return value
 }
 
-void txPulsantePremuto(byte nPushButton){
-  //Serial.println("yes");
-  char msg[MSG_LEN] = {0xAA,0,0,0,0,0,0};  // initialize msg
-  msg[1]=nPushButton;
-  digitalWrite(led_pin,HIGH);
-  vw_send((uint8_t *)msg,MSG_LEN);         // send to tx-radio
-  vw_wait_tx();
-  digitalWrite(led_pin,LOW);
+void resetSEQUENZA(){
+  M[0]=0;
+  M[1]=0;
+  M[2]=0;
+  M[3]=0;
+  cifra=0;
 }

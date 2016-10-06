@@ -14,9 +14,9 @@ const long responseA[]={16753245,16736925,16769565,\
 			16724175,16718055,16743045,\
 			16716015,16726215,16734885,\
 			16728765,16730805,16732845};
-const char NUMERO[]={'0','1','2','3','4','5','6','7','8','9'};
+const char NUMERI[]={'0','1','2','3','4','5','6','7','8','9'};
 const byte KEY_OK = 21;
-const char SEQUENZA[]={0,0,0,0};
+ char SEQUENZA[]={0,0,0,0};
 byte cifra=0;
 unsigned long tempo=0;
 ////////////////////////////////
@@ -99,9 +99,9 @@ byte ir_decode(decode_results *results){
 }
 
 void resetSEQUENZA(){
-  M[0]=0;
-  M[1]=0;
-  M[2]=0;
-  M[3]=0;
+  SEQUENZA[0]=0;
+  SEQUENZA[1]=0;
+  SEQUENZA[2]=0;
+  SEQUENZA[3]=0;
   cifra=0;
 }

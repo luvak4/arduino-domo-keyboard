@@ -14,11 +14,9 @@ const long responseA[]={16753245,16736925,16769565,\
 			16724175,16718055,16743045,\
 			16716015,16726215,16734885,\
 			16728765,16730805,16732845};
-const char NUMERI[]={'0','1','2','3','4','5','6','7','8','9'};
 const byte KEY_OK = 21;
- char SEQUENZA[]={0,0,0,0};
-byte cifra=0;
 unsigned long tempo=0;
+int NumeroComposto=0;
 ////////////////////////////////
 // setup
 ////////////////////////////////
@@ -45,30 +43,27 @@ void loop(){
       tempo=millis();
       //
       if (key==KEY_OK){
+	// premuto carattere di conferma
 	//////////////////////////////////
 	char msg[MSG_LEN] = {0xAA,0,0,0,0,0,0};  // initialize msg
-	msg[1]=SEQUENZA[0];
-	msg[2]=SEQUENZA[1];
-	msg[3]=SEQUENZA[2];
-	msg[4]=SEQUENZA[3];
+	char numcomp[2] = {0,0};
+	numcomp = itoa(NumeroComposto,numcomp,10);
+	msg[1]=numcomp[0];
+	msg[2]=numcomp[1];
 	digitalWrite(led_pin,HIGH);
 	vw_send((uint8_t *)msg,MSG_LEN);         // send to tx-radio
 	vw_wait_tx();
 	digitalWrite(led_pin,LOW);
 	//////////////////////////////////
-	resetSEQUENZA();
+	NumeroComposto=0;
       } else {
+	// premuto altro tasto
 	if (key > 10){
-	  // exit
+	  // non preso in considerazione
 	} else {
-	  // compone il numero
-	  SEQUENZA[cifra]=NUMERI[key-1];
-	  if (cifra > 3){
-	    // massimo 4 cifre
-	    resetSEQUENZA();
-	  } else {
-	    cifra+=1;
-	  }
+	  // compone il numero intero
+	  // dalla sequanza di tasti
+	  NumeroComposto=NumeroComposto*10+key-1; // key va da 1-10 per indicare 0-9
 	}
       }
     } else {
@@ -96,12 +91,4 @@ byte ir_decode(decode_results *results){
     }
   }
   return key;                           // return value
-}
-
-void resetSEQUENZA(){
-  SEQUENZA[0]=0;
-  SEQUENZA[1]=0;
-  SEQUENZA[2]=0;
-  SEQUENZA[3]=0;
-  cifra=0;
 }

@@ -47,11 +47,14 @@ void loop(){
 	//////////////////////////////////
 	char msg[MSG_LEN] = {0xAA,0,0,0,0,0,0};  // initialize msg
 	char numcomp[2] = {0,0};
+	// intero ad array
 	numcomp = itoa(NumeroComposto,numcomp,10);
+	// mix su msg
 	msg[1]=numcomp[0];
 	msg[2]=numcomp[1];
 	digitalWrite(led_pin,HIGH);
-	vw_send((uint8_t *)msg,MSG_LEN);         // send to tx-radio
+	// tx radio
+	vw_send((uint8_t *)msg,MSG_LEN);
 	vw_wait_tx();
 	digitalWrite(led_pin,LOW);
 	//////////////////////////////////

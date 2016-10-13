@@ -51,6 +51,8 @@ int NumeroComposto=0;
 void setup()
 {
   pinMode(led_pin, OUTPUT);    // led set pin
+  pinMode(power_radio_rx, OUTPUT);    // led set pin
+  digitalWrite(power_radio_rx,HIGH);
   vw_set_tx_pin(transmit_pin); // radio set tx pin
   vw_set_rx_pin(receive_pin);  // radio set rx pin
   vw_setup(1000);              // radio speed
@@ -67,8 +69,9 @@ void loop(){
   //////////////
   if (vw_get_message(BYTEradio, &buflen)){
     decodeMessage();
+    Serial.println("----");
     if (INTERIlocali[INDIRIZZO]==CIRC_CANTINA){
-      Serial.println(INTERIlocali[DATOb]);
+      
     }
   } 
   
@@ -138,6 +141,7 @@ if (key>0){
   //Serial.println(key);
   switch (key){
     case KEY_OK:
+    Serial.println(NumeroComposto);
       INTERIlocali[INDIRIZZO]=PONTEsuGIU;
       INTERIlocali[DATOa]=NumeroComposto;
       INTERIlocali[DATOb]=0;
@@ -145,10 +149,10 @@ if (key>0){
       encodeMessage();
       digitalWrite(led_pin,HIGH);
       vw_rx_stop();
-      digitalWrite(power_radio_rx,LOW);    
+      //digitalWrite(power_radio_rx,LOW);    
       vw_send((uint8_t *)BYTEradio,BYTEStoTX);
       vw_wait_tx();
-      digitalWrite(power_radio_rx,HIGH);
+      //digitalWrite(power_radio_rx,HIGH);
       vw_rx_start();
       digitalWrite(led_pin,LOW);
       //Serial.println(NumeroComposto);

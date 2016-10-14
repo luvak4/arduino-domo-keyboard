@@ -1,4 +1,4 @@
-////////////////////////////////#include <IRremote.h> 
+#include <IRremote.h> 
 #include <VirtualWire.h>
 //
 #define KEY_OK    16769565
@@ -34,8 +34,8 @@ const int receive_pin    = 11;
 const int transmit_pin   = 12;
 uint8_t buflen = BYTEStoTX;  //for rx
 const int RECV_PIN = 2;      // ir pin
-////////////////////////////////IRrecv irrecv(RECV_PIN);     // ir initialize library
-////////////////////////////////decode_results results;      // ir variable
+IRrecv irrecv(RECV_PIN);     // ir initialize library
+decode_results results;      // ir variable
 /*
   16753245 16736925 16769565
   16720605 16712445 16761405
@@ -70,8 +70,8 @@ void loop(){
   //
   if (vw_get_message(BYTEradio, &buflen)){
     decodeMessage();
-    Serial.println("----");
     if (INTERIlocali[INDIRIZZO]==CIRC_CANTINA){
+      Serial.println(INTERIlocali[DATOb]);
     }
   } 
   //
@@ -84,12 +84,12 @@ void loop(){
   }
 }
 
-/*////////////////////////////////
+
 long ir_decode(decode_results *results){
   long keyLongNumber = results->value;  // get the long number
   return keyLongNumber;
 }
-*/////////////////////////////////
+
 
 void decodeMessage(){
   // de-cifratura
@@ -121,7 +121,7 @@ void cipher(){
   }
 }
 
-/*////////////////////////////////
+
 void testIR(){
   if (irrecv.decode(&results)) {
     long key=ir_decode(&results); 
@@ -182,4 +182,3 @@ void testIR(){
     irrecv.resume();
   }
 }
-*/////////////////////////////////

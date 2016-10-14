@@ -29,7 +29,7 @@ byte CIFR[BYTEStoTX]={156,33,183,95,230,63,250,215};
 const unsigned long mask=0x0000FFFF;
 //
 const int led_pin        = 13;      
-const int power_radio_rx = 10;
+//const int power_radio_rx = 10;
 const int receive_pin    = 11;
 const int transmit_pin   = 12;
 uint8_t buflen = BYTEStoTX;  //for rx
@@ -53,20 +53,20 @@ int NumeroComposto=0;
 void setup()
 {
   pinMode(led_pin, OUTPUT);
-  pinMode(power_radio_rx, OUTPUT);
-  digitalWrite(power_radio_rx,HIGH);
+  //pinMode(power_radio_rx, OUTPUT);
+  //digitalWrite(power_radio_rx,HIGH);
   vw_set_tx_pin(transmit_pin); // radio set tx pin
   vw_set_rx_pin(receive_pin);  // radio set rx pin
-  vw_setup(1000);              // radio speed
+  vw_setup(500);              // radio speed
   vw_rx_start();               // radio rx ON
-  ////////////////////////////////irrecv.enableIRIn();         // ir rx ON
+  irrecv.enableIRIn();         // ir rx ON
   Serial.begin(9600);
 }
 ////////////////////////////////
 // loop
 ////////////////////////////////
 void loop(){
-  ////////////////////////////////testIR();
+  testIR();
   //
   if (vw_get_message(BYTEradio, &buflen)){
     decodeMessage();
@@ -125,11 +125,12 @@ void cipher(){
 void testIR(){
   if (irrecv.decode(&results)) {
     long key=ir_decode(&results); 
+    
     //
     //Serial.println(key);
     switch (key){
     case KEY_OK:
-      //Serial.println(NumeroComposto);
+      Serial.println(NumeroComposto);
       INTERIlocali[INDIRIZZO]=PONTEsuGIU;
       INTERIlocali[DATOa]=NumeroComposto;
       INTERIlocali[DATOb]=0;
@@ -148,33 +149,43 @@ void testIR(){
       break;
     case KEY_1:
       NumeroComposto=NumeroComposto*10+1;
+      Serial.println(NumeroComposto);
       break;
     case KEY_2:
       NumeroComposto=NumeroComposto*10+2;
+      Serial.println(NumeroComposto);
       break;
     case KEY_3:
       NumeroComposto=NumeroComposto*10+3;
+      Serial.println(NumeroComposto);
       break;
     case KEY_4:
       NumeroComposto=NumeroComposto*10+4;  
+      Serial.println(NumeroComposto);
       break;
     case KEY_5:
       NumeroComposto=NumeroComposto*10+5;
+      Serial.println(NumeroComposto);
       break;
     case KEY_6:
       NumeroComposto=NumeroComposto*10+6; 
+      Serial.println(NumeroComposto);
       break;
     case KEY_7:
       NumeroComposto=NumeroComposto*10+7; 
+      Serial.println(NumeroComposto);
       break;
     case KEY_8:
       NumeroComposto=NumeroComposto*10+8; 
+      Serial.println(NumeroComposto);
       break;
     case KEY_9:
       NumeroComposto=NumeroComposto*10+9; 
+      Serial.println(NumeroComposto);
       break;
     case KEY_0:
       NumeroComposto=NumeroComposto*10;
+      Serial.println(NumeroComposto);
       break;
     }
     delay(100);

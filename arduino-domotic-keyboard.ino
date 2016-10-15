@@ -73,6 +73,27 @@ void setup()
 // loop
 ////////////////////////////////
 void loop(){
+  delay(5000);
+
+
+/*
+       INTERIlocali[INDIRIZZO]=PONTEsuGIU;
+      INTERIlocali[DATOa]=9876;
+      INTERIlocali[DATOb]=0;
+      INTERIlocali[DATOc]=0;
+      encodeMessage();
+      digitalWrite(led_pin,HIGH);
+      vw_rx_stop();
+      vw_send((uint8_t *)BYTEradio,BYTEStoTX);
+      vw_wait_tx();
+      vw_rx_start();
+      digitalWrite(led_pin,LOW);
+*/
+vw_setup(2000);
+       caratteri="123456789012345";
+      radioDisplay(0,0);
+      vw_setup(500);
+      /*
   testIR();
   //
   if (vw_get_message(BYTEradio, &buflen)){
@@ -80,8 +101,6 @@ void loop(){
     if (INTERIlocali[INDIRIZZO]==CIRC_CANTINA){
       Serial.println(INTERIlocali[DATOb]);
       // trasmette un testo al display
-      caratteri="prova";
-      radioDisplay(0,0);
     }
   } 
   //
@@ -92,6 +111,7 @@ void loop(){
   if (NumeroComposto>65535){
     NumeroComposto=0;
   }
+  */
 }
 
 
@@ -197,15 +217,6 @@ void testIR(){
   }
 }
 
-// the setup routine runs once when you press reset:
-void setup() {
-  Serial.begin(9600);
-  /////////////////
-}
-
-// the loop routine runs over and over again forever:
-void loop() {
-}
 
 void pulisciMsgDisplay(){
   for (byte n=0;n<20;n++){
@@ -215,28 +226,48 @@ void pulisciMsgDisplay(){
 
 void radioDisplay(byte colonna, byte riga){
   pulisciMsgDisplay();
+  
+
+
+  int g=DISPLAY;
+  BYTEradioDisplay[0]=g & mask;
+  g=g >> 8;
+  BYTEradioDisplay[1]=g & mask;
+  
+  //BYTEradioDisplay[DISPLAYindirizzo]=DISPLAY;
+  BYTEradioDisplay[2]=colonna;
+  BYTEradioDisplay[3]=riga;
   //
-  BYTEradioDisplay[DISPLAYindirizzo]=DISPLAY;
-  BYTEradioDisplay[DISPLAYcolonna]=colonna;
-  BYTEradioDisplay[DISPLAYriga]=riga;
+  BYTEradioDisplay[4]=caratteri.length();
   //
-  BYTEradioDisplay[DISPLAYnCaratteri]=caratteri.legth();
-  //
-  if (BYTEradioDisplay[DISPLAYnCaratteri]>20){
-    BYTEradioDisplay[DISPLAYnCaratteri]=20;
+  if (BYTEradioDisplay[4]>20){
+    BYTEradioDisplay[4]=20;
   }
   //
-  for (byte n=DISPLAYinizioTesto;n<BYTEradioDisplay[DISPLAYnCaratteri]+DISPLAYinizioTesto;n++){
-    BYTEradioDisplay[n]=caratteri[n-DISPLAYinizioTesto];
+  for (byte n=5;n<BYTEradioDisplay[4]+5;n++){
+    BYTEradioDisplay[n]=caratteri[n-5];
   }
   // cifratura
   for (byte n=0; n<27;n++){
-    BYTEradioDisplay[n]=BYTEradioDisplay[n] & CIFR[n];
+    BYTEradioDisplay[n]=BYTEradioDisplay[n] ^ CIFR[n];
   }
+
+
+/*
+     encodeMessage();
+      digitalWrite(led_pin,HIGH);
+      vw_rx_stop();
+      vw_send((uint8_t *)BYTEradio,BYTEStoTX);
+      vw_wait_tx();
+      vw_rx_start();
+      digitalWrite(led_pin,LOW);
+*/
+
+  
   // tx via radio
   digitalWrite(led_pin,HIGH);
   vw_rx_stop();
-  vw_send((uint8_t *)BYTEradioDisplay,VW_MAX_MESSAGE_LEN);
+  vw_send((uint8_t *)BYTEradioDisplay,VW_MAX_PAYLOAD);
   vw_wait_tx();
   vw_rx_start();
   digitalWrite(led_pin,LOW);

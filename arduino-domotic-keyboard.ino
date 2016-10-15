@@ -1,5 +1,13 @@
 #include <IRremote.h> 
 #include <VirtualWire.h>
+#define DISPLAYindirizzo 0
+#define DISPLAYcolonna   1
+#define DISPLAYriga      2
+#define DISPLAYnCaratteri 3
+#define DISPLAYinizioTesto 4
+String caratteri;
+//#define VW_MAX_MESSAGE_LEN 30
+byte BYTEradioDisplay[VW_MAX_MESSAGE_LEN];
 //
 #define KEY_OK    16769565
 #define KEY_1     16724175
@@ -20,16 +28,17 @@
 //
 #define PONTEsuGIU 1234
 #define CIRC_CANTINA 1235
+#define DISPLAY 1236
 //
 #define BYTEStoTX  8
 //
 int  INTERIlocali[4]={0,0,0,0};
 byte BYTEradio[BYTEStoTX];
-byte CIFR[BYTEStoTX]={156,33,183,95,230,63,250,215};
+byte CIFR[]={223,205,228,240,43,146,241,87,213,48,235,131,6,81,26,70,34,74,224,27,111,150,22,138,239,200,179,222,231,212};
+//
 const unsigned long mask=0x0000FFFF;
 //
 const int led_pin        = 13;      
-//const int power_radio_rx = 10;
 const int receive_pin    = 11;
 const int transmit_pin   = 12;
 uint8_t buflen = BYTEStoTX;  //for rx
@@ -53,8 +62,6 @@ int NumeroComposto=0;
 void setup()
 {
   pinMode(led_pin, OUTPUT);
-  //pinMode(power_radio_rx, OUTPUT);
-  //digitalWrite(power_radio_rx,HIGH);
   vw_set_tx_pin(transmit_pin); // radio set tx pin
   vw_set_rx_pin(receive_pin);  // radio set rx pin
   vw_setup(500);              // radio speed
@@ -72,6 +79,9 @@ void loop(){
     decodeMessage();
     if (INTERIlocali[INDIRIZZO]==CIRC_CANTINA){
       Serial.println(INTERIlocali[DATOb]);
+      // trasmette un testo al display
+      caratteri="prova";
+      radioDisplay(0,0);
     }
   } 
   //
@@ -121,13 +131,9 @@ void cipher(){
   }
 }
 
-
 void testIR(){
   if (irrecv.decode(&results)) {
-    long key=ir_decode(&results); 
-    
-    //
-    //Serial.println(key);
+    long key=ir_decode(&results);     
     switch (key){
     case KEY_OK:
       Serial.println(NumeroComposto);
@@ -138,13 +144,10 @@ void testIR(){
       encodeMessage();
       digitalWrite(led_pin,HIGH);
       vw_rx_stop();
-      //digitalWrite(power_radio_rx,LOW);    
       vw_send((uint8_t *)BYTEradio,BYTEStoTX);
       vw_wait_tx();
-      //digitalWrite(power_radio_rx,HIGH);
       vw_rx_start();
       digitalWrite(led_pin,LOW);
-      //Serial.println(NumeroComposto);
       NumeroComposto=0;
       break;
     case KEY_1:
@@ -192,4 +195,49 @@ void testIR(){
     tempo=millis();
     irrecv.resume();
   }
+}
+
+// the setup routine runs once when you press reset:
+void setup() {
+  Serial.begin(9600);
+  /////////////////
+}
+
+// the loop routine runs over and over again forever:
+void loop() {
+}
+
+void pulisciMsgDisplay(){
+  for (byte n=0;n<20;n++){
+    BYTEradioDisplay[n]=0;
+  }
+}
+
+void radioDisplay(byte colonna, byte riga){
+  pulisciMsgDisplay();
+  //
+  BYTEradioDisplay[DISPLAYindirizzo]=DISPLAY;
+  BYTEradioDisplay[DISPLAYcolonna]=colonna;
+  BYTEradioDisplay[DISPLAYriga]=riga;
+  //
+  BYTEradioDisplay[DISPLAYnCaratteri]=caratteri.legth();
+  //
+  if (BYTEradioDisplay[DISPLAYnCaratteri]>20){
+    BYTEradioDisplay[DISPLAYnCaratteri]=20;
+  }
+  //
+  for (byte n=DISPLAYinizioTesto;n<BYTEradioDisplay[DISPLAYnCaratteri]+DISPLAYinizioTesto;n++){
+    BYTEradioDisplay[n]=caratteri[n-DISPLAYinizioTesto];
+  }
+  // cifratura
+  for (byte n=0; n<27;n++){
+    BYTEradioDisplay[n]=BYTEradioDisplay[n] & CIFR[n];
+  }
+  // tx via radio
+  digitalWrite(led_pin,HIGH);
+  vw_rx_stop();
+  vw_send((uint8_t *)BYTEradioDisplay,VW_MAX_MESSAGE_LEN);
+  vw_wait_tx();
+  vw_rx_start();
+  digitalWrite(led_pin,LOW);
 }

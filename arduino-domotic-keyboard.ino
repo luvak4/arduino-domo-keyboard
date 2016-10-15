@@ -73,7 +73,7 @@ void setup()
 // loop
 ////////////////////////////////
 void loop(){
-  delay(5000);
+  //delay(5000);
 
 
 /*
@@ -89,9 +89,17 @@ void loop(){
       vw_rx_start();
       digitalWrite(led_pin,LOW);
 */
-vw_setup(2000);
-       caratteri="123456789012345";
-      radioDisplay(0,0);
+      vw_setup(2000);
+      //////////////////////
+      for (int n=0;n<4;n++){
+      caratteri="Ciao Luca Bravissimo";
+      radioDisplay(0,n);
+      delay(300);
+      caratteri="                    ";
+      radioDisplay(0,n);     
+      delay(300);
+      }
+      
       vw_setup(500);
       /*
   testIR();

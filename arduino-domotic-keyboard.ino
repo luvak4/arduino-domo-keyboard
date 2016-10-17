@@ -37,9 +37,9 @@ String caratteri;
 int  INTERIlocali[4]={0,0,0,0};
 byte BYTEradio[BYTEStoTX];
 byte BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
-byte CIFR[]={223,205,228,240,43,146,241,/
-	     87,213,48,235,131,6,81,26,/
-	     70,34,74,224,27,111,150,22,/
+byte CIFR[]={223,205,228,240,43,146,241,//
+	     87,213,48,235,131,6,81,26,//
+	     70,34,74,224,27,111,150,22,//
 	     138,239,200,179,222,231,212};
 //
 const unsigned long mask=0x0000FFFF;

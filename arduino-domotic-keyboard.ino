@@ -64,7 +64,7 @@ void setup()
   vw_setup(VELOCITAstd);              // radio speed
   vw_rx_start();               // radio rx ON
   irrecv.enableIRIn();         // ir rx ON
-  //Serial.begin(9600);
+  Serial.begin(9600);
 }
 ////////////////////////////////
 // loop
@@ -72,14 +72,20 @@ void setup()
 void loop(){
   testIR();
   if (vw_get_message(BYTEradio, &buflen)){
+    //Serial.println("----");
     decodeMessage();
     switch (INTERIlocali[INDIRIZZO]){
     case indirCANTINA:
+      String temper=String(INTERIlocali[DATOb]);
+      String luce=String(INTERIlocali[DATOa]);
+      bool ledon=INTERIlocali[DATOc];
+      caratteri=temper+" "+luce+ " "+char(ledon);
+  
+      radioindirDISPLAY(0,2);
+      //Serial.println(temper);
+      //Serial.println(luce);
+      //Serial.println(ledon);
       break;
-    }
-    if (INTERIlocali[INDIRIZZO]==indirCANTINA){
-      //Serial.println(INTERIlocali[DATOb]);
-      // trasmette un testo al indirDISPLAY
     }
   } 
 }

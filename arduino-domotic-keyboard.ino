@@ -5,23 +5,11 @@
 #define indirDISPLAYriga      2
 #define indirDISPLAYnCaratteri 3
 #define indirDISPLAYinizioTesto 4
-String caratteri;
-//#define VW_MAX_MESSAGE_LEN 30
-byte BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
 //
-/*
-#define KEY_OK    16769565
-#define KEY_1     16724175
-#define KEY_2     16718055
-#define KEY_3     16743045
-#define KEY_4     16716015
-#define KEY_5     16726215
-#define KEY_6     16734885
-#define KEY_7     16728765
-#define KEY_8     16730805
-#define KEY_9     16732845
-#define KEY_0     16738455
-*/
+#define VELOCITAstd 500
+#define VELOCITAhi  2000
+String caratteri;
+//
 #define KEY_1 -983386969
 #define KEY_2 -1519975698
 #define KEY_3 1007641363
@@ -42,13 +30,17 @@ byte BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
 //
 #define indirMAESTRO 1234
 #define indirCANTINA 1235
-#define indirDISPLAY 1236
+#define indirMAESTROdisplay 1236
 //
 #define BYTEStoTX  8
 //
 int  INTERIlocali[4]={0,0,0,0};
 byte BYTEradio[BYTEStoTX];
-byte CIFR[]={223,205,228,240,43,146,241,87,213,48,235,131,6,81,26,70,34,74,224,27,111,150,22,138,239,200,179,222,231,212};
+byte BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
+byte CIFR[]={223,205,228,240,43,146,241,/
+	     87,213,48,235,131,6,81,26,/
+	     70,34,74,224,27,111,150,22,/
+	     138,239,200,179,222,231,212};
 //
 const unsigned long mask=0x0000FFFF;
 //
@@ -59,17 +51,8 @@ uint8_t buflen = BYTEStoTX;  //for rx
 const int RECV_PIN = 2;      // ir pin
 IRrecv irrecv(RECV_PIN);     // ir initialize library
 decode_results results;      // ir variable
-/*
-  16753245 16736925 16769565
-  16720605 16712445 16761405
-  16769055 16754775 16748655
-  16738455 16750695 16756815
-  16724175 16718055 16743045
-  16716015 16726215 16734885
-  16728765 16730805 16732845
-*/
 unsigned long tempo=0;
-int NumeroComposto=0;
+int NUMcomp=0;
 ////////////////////////////////
 // setup
 ////////////////////////////////
@@ -78,49 +61,33 @@ void setup()
   pinMode(led_pin, OUTPUT);
   vw_set_tx_pin(transmit_pin); // radio set tx pin
   vw_set_rx_pin(receive_pin);  // radio set rx pin
-  vw_setup(500);              // radio speed
+  vw_setup(VELOCITAstd);              // radio speed
   vw_rx_start();               // radio rx ON
   irrecv.enableIRIn();         // ir rx ON
-  Serial.begin(9600);
+  //Serial.begin(9600);
 }
 ////////////////////////////////
 // loop
 ////////////////////////////////
 void loop(){
-/*
-      vw_setup(2000);
-      //////////////////////
-      for (int n=0;n<4;n++){
-      caratteri="Ciao Luca Bravissimo";
-      radioindirDISPLAY(0,n);
-      delay(300);
-      caratteri="                    ";
-      radioindirDISPLAY(0,n);     
-      delay(300);
-      }
-      
-      vw_setup(500);
-      */
   testIR();
-  //
   if (vw_get_message(BYTEradio, &buflen)){
     decodeMessage();
+    switch (INTERIlocali[INDIRIZZO]){
+    case indirCANTINA:
+      break;
+    }
     if (INTERIlocali[INDIRIZZO]==indirCANTINA){
       //Serial.println(INTERIlocali[DATOb]);
       // trasmette un testo al indirDISPLAY
     }
   } 
-  //
-  
-  
 }
-
 
 long ir_decode(decode_results *results){
   long keyLongNumber = results->value;  // get the long number
   return keyLongNumber;
 }
-
 
 void decodeMessage(){
   // de-cifratura
@@ -157,80 +124,59 @@ void testIR(){
     long key=ir_decode(&results);     
     switch (key){
     case KEY_OK:
+      ///////////////
+      // premuto ok
+      ///////////////
       stampaNc();
+      //
       INTERIlocali[INDIRIZZO]=indirMAESTRO;
-      INTERIlocali[DATOa]=NumeroComposto;
+      INTERIlocali[DATOa]=NUMcomp;
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
+      //
       encodeMessage();
+      //
       digitalWrite(led_pin,HIGH);
       vw_rx_stop();
       vw_send((uint8_t *)BYTEradio,BYTEStoTX);
       vw_wait_tx();
       vw_rx_start();
       digitalWrite(led_pin,LOW);
-      NumeroComposto=0;
+      //
+      NUMcomp=0;
       break;
-    case KEY_1:
-      NumeroComposto=NumeroComposto*10+1;
-      stampaNc();
-      break;
-    case KEY_2:
-      NumeroComposto=NumeroComposto*10+2;
-      stampaNc();
-      break;
-    case KEY_3:
-      NumeroComposto=NumeroComposto*10+3;
-      stampaNc();
-      break;
-    case KEY_4:
-      NumeroComposto=NumeroComposto*10+4;  
-      stampaNc();
-      break;
-    case KEY_5:
-      NumeroComposto=NumeroComposto*10+5;
-      stampaNc();
-      break;
-    case KEY_6:
-      NumeroComposto=NumeroComposto*10+6; 
-      stampaNc();
-      break;
-    case KEY_7:
-      NumeroComposto=NumeroComposto*10+7; 
-      stampaNc();
-      break;
-    case KEY_8:
-      NumeroComposto=NumeroComposto*10+8; 
-      stampaNc();
-      break;
-    case KEY_9:
-      NumeroComposto=NumeroComposto*10+9; 
-      stampaNc();
-      break;
-    case KEY_0:
-      NumeroComposto=NumeroComposto*10;
-      stampaNc();
-      break;
+    case KEY_1: scorriNumero(1);break;
+    case KEY_2: scorriNumero(2);break;
+    case KEY_3: scorriNumero(3);break;
+    case KEY_4: scorriNumero(4);break;
+    case KEY_5: scorriNumero(5);break;
+    case KEY_6: scorriNumero(6);break;
+    case KEY_7: scorriNumero(7);break;
+    case KEY_8: scorriNumero(8);break;
+    case KEY_9: scorriNumero(9);break;
+    case KEY_0: scorriNumero(0);break;
     case KEY_CLEAR:
-      NumeroComposto=0;
+      NUMcomp=0;
       stampaNc();
       break;
     }
+    // ritardo
     delay(100);
+    // prende nota del tempo
     tempo=millis();
+    // continua a ricevere ir
     irrecv.resume();
   }
   //
   if ((millis()-tempo)>5000){
     tempo=millis();
-    NumeroComposto=0;
+    NUMcomp=0;
   }
   //
-  if (NumeroComposto<0){
-    NumeroComposto=0;
+  if (NUMcomp<0){
+    NUMcomp=0;
   }
 }
-
 
 void pulisciMsgindirDISPLAY(){
   for (byte n=0;n<20;n++){
@@ -239,25 +185,24 @@ void pulisciMsgindirDISPLAY(){
 }
 
 void radioindirDISPLAY(byte colonna, byte riga){
+  // pulisce bytes
   pulisciMsgindirDISPLAY();
-  
-
-
-  int g=indirDISPLAY;
+  // indirizzo display
+  int g=indirMAESTROdisplay;
+  // caricamento int su bytes
   BYTEradioindirDISPLAY[0]=g & mask;
   g=g >> 8;
   BYTEradioindirDISPLAY[1]=g & mask;
-  
-  //BYTEradioindirDISPLAY[indirDISPLAYindirizzo]=indirDISPLAY;
+  // caricamento riga e colonna su bytes
   BYTEradioindirDISPLAY[2]=colonna;
   BYTEradioindirDISPLAY[3]=riga;
-  //
+  // caricamento lunghezza testo su bytes
   BYTEradioindirDISPLAY[4]=caratteri.length();
-  //
+  // la lunghezza deve essere non superiore a 20
   if (BYTEradioindirDISPLAY[4]>20){
     BYTEradioindirDISPLAY[4]=20;
   }
-  //
+  // caricamento messaggio su bytes
   for (byte n=5;n<BYTEradioindirDISPLAY[4]+5;n++){
     BYTEradioindirDISPLAY[n]=caratteri[n-5];
   }
@@ -265,34 +210,37 @@ void radioindirDISPLAY(byte colonna, byte riga){
   for (byte n=0; n<27;n++){
     BYTEradioindirDISPLAY[n]=BYTEradioindirDISPLAY[n] ^ CIFR[n];
   }
-
-
-/*
-     encodeMessage();
-      digitalWrite(led_pin,HIGH);
-      vw_rx_stop();
-      vw_send((uint8_t *)BYTEradio,BYTEStoTX);
-      vw_wait_tx();
-      vw_rx_start();
-      digitalWrite(led_pin,LOW);
-*/
-
-  
   // tx via radio
   digitalWrite(led_pin,HIGH);
   vw_rx_stop();
-  vw_setup(2000);
+  // cambio di velocita
+  vw_setup(VELOCITAhi);
   vw_send((uint8_t *)BYTEradioindirDISPLAY,VW_MAX_PAYLOAD);
   vw_wait_tx();
-  vw_setup(500);
+  // ripristino velocita
+  vw_setup(VELOCITAstd);
   vw_rx_start();
   digitalWrite(led_pin,LOW);
+  // ritardo necessario
+  delay(300);
 }
 
 void stampaNc(){
-      caratteri="     ";
-      radioindirDISPLAY(0,3);
-      delay(300);
-      caratteri=String(NumeroComposto);
-      radioindirDISPLAY(0,3);
+  pulisciDisplay(0,3,6);
+  //
+  caratteri=String(NUMcomp);
+  radioindirDISPLAY(0,3);
+}
+
+void pulisciDisplay(byte colonna, byte riga, byte numCaratteri){
+  caratteri="";
+  for (byte n=1; n<numCaratteri;n++){
+    caratteri+=" ";
+  }
+  radioindirDISPLAY(colonna,riga);
+}
+
+void scorriNumero(byte aggiungi){
+  NUMcomp=NUMcomp*10+aggiungi;
+  stampaNc();
 }

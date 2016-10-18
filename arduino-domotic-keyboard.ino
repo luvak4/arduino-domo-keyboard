@@ -80,7 +80,7 @@ void setup()
   vw_setup(VELOCITAstd);       
   vw_rx_start();               
   irrecv.enableIRIn();         // ir rx ON
-  //Serial.begin(9600); // debug
+  Serial.begin(9600); // debug
 }
 ////////////////////////////////
 // loop
@@ -190,6 +190,7 @@ void chechForIR(){
     irrecv.resume();
   }
   /////end check for IR///////////
+  Serial.println(tempo);
   if ((millis()-tempo)>5000){
     tempo=millis();
     NUMcomp=0;

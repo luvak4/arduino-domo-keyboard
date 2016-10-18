@@ -1,56 +1,69 @@
 #include <IRremote.h> 
 #include <VirtualWire.h>
-#define indirDISPLAYindirizzo 0
-#define indirDISPLAYcolonna   1
-#define indirDISPLAYriga      2
-#define indirDISPLAYnCaratteri 3
-#define indirDISPLAYinizioTesto 4
+////////////////////////////////
+// pins
+////////////////////////////////
+const int led_pin_rx   = 13;
+const int led_pin_tx   = 10;
+const int receive_pin  = 11;
+const int transmit_pin = 12;
+const int RECV_PIN     = 2; // ir pin
+////////////////////////////////
+// indirizzi radio
+////////////////////////////////
+#define indirMAESTRO        1234 //tx
+#define indirMAESTROdisplay 1236 //tx
+#define indirCANTINA        1235 //rx
+////////////////////////////////
+// trasmissione radio a display
+////////////////////////////////
+#define DISPLAYindirizzoLSB    0
+#define DISPLAYindirizzoMSB    1
+#define DISPLAYcolonna         2
+#define DISPLAYriga            3
+#define DISPLAYnCaratteri      4
+#define DISPLAYinizioTesto     5
+#define VELOCITAhi          2000
 //
-#define VELOCITAstd 500
-#define VELOCITAhi  2000
-String caratteri;
-//
-#define KEY_1 -983386969
-#define KEY_2 -1519975698
-#define KEY_3 1007641363
-#define KEY_4 11835754
-#define KEY_5 -374420087
-#define KEY_6 1316801890
-#define KEY_7 -1829136225
-#define KEY_8 -1395652082
-#define KEY_9 497848941
-#define KEY_0 -1975719008
-#define KEY_OK -1812574087
+byte    BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
+String  caratteri;
+////////////////////////////////
+// comunicazione radio principale
+////////////////////////////////
+#define VELOCITAstd   500
+#define INDIRIZZO       0
+#define DATOa           1
+#define DATOb           2
+#define DATOc           3
+#define BYTEStoTX       8
+int     INTERIlocali[4]={0,0,0,0};
+byte    BYTEradio[BYTEStoTX];
+uint8_t buflen = BYTEStoTX; //for rx
+////////////////////////////////
+// ricezione via infrarossi
+////////////////////////////////
+#define KEY_1     -983386969
+#define KEY_2    -1519975698
+#define KEY_3     1007641363
+#define KEY_4       11835754
+#define KEY_5     -374420087
+#define KEY_6     1316801890
+#define KEY_7    -1829136225
+#define KEY_8    -1395652082
+#define KEY_9      497848941
+#define KEY_0    -1975719008
+#define KEY_OK   -1812574087
 #define KEY_CLEAR -477592334
-//
-#define INDIRIZZO  0
-#define DATOa      1
-#define DATOb      2
-#define DATOc      3
-//
-#define indirMAESTRO 1234
-#define indirCANTINA 1235
-#define indirMAESTROdisplay 1236
-//
-#define BYTEStoTX  8
-//
-int  INTERIlocali[4]={0,0,0,0};
-byte BYTEradio[BYTEStoTX];
-byte BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
+IRrecv irrecv(RECV_PIN);     // ir initialize library
+decode_results results;      // ir variable
+////////////////////////////////
+// varie
+////////////////////////////////
 byte CIFR[]={223,205,228,240,43,146,241,//
 	     87,213,48,235,131,6,81,26,//
 	     70,34,74,224,27,111,150,22,//
 	     138,239,200,179,222,231,212};
-//
 const unsigned long mask=0x0000FFFF;
-//
-const int led_pin        = 13;      
-const int receive_pin    = 11;
-const int transmit_pin   = 12;
-uint8_t buflen = BYTEStoTX;  //for rx
-const int RECV_PIN = 2;      // ir pin
-IRrecv irrecv(RECV_PIN);     // ir initialize library
-decode_results results;      // ir variable
 unsigned long tempo=0;
 int NUMcomp=0;
 ////////////////////////////////
@@ -58,45 +71,45 @@ int NUMcomp=0;
 ////////////////////////////////
 void setup()
 {
-  pinMode(led_pin, OUTPUT);
-  vw_set_tx_pin(transmit_pin); // radio set tx pin
-  vw_set_rx_pin(receive_pin);  // radio set rx pin
-  vw_setup(VELOCITAstd);              // radio speed
-  vw_rx_start();               // radio rx ON
+  pinMode(led_pin_rx,OUTPUT);
+  pinMode(led_pin_tx,OUTPUT);  
+  digitalWrite(led_pin_rx,LOW);
+  digitalWrite(led_pin_tx,LOW);
+  vw_set_tx_pin(transmit_pin); 
+  vw_set_rx_pin(receive_pin);  
+  vw_setup(VELOCITAstd);       
+  vw_rx_start();               
   irrecv.enableIRIn();         // ir rx ON
-  Serial.begin(9600);
+  //Serial.begin(9600); // debug
 }
 ////////////////////////////////
 // loop
 ////////////////////////////////
 void loop(){
-  testIR();
+  // chech for IR
+  chechForIR();
+  // check for rx radio
   if (vw_get_message(BYTEradio, &buflen)){
-    //Serial.println("----");
+    vw_rx_stop();
+    digitalWrite(led_pin_rx,HIGH);
     decodeMessage();
     switch (INTERIlocali[INDIRIZZO]){
     case indirCANTINA:
       String temper=String(INTERIlocali[DATOb]);
       String luce=String(INTERIlocali[DATOa]);
       bool ledon=INTERIlocali[DATOc];
-      caratteri=temper+" "+luce+ " "+char(ledon);
-  
-      radioindirDISPLAY(0,2);
-      //Serial.println(temper);
-      //Serial.println(luce);
-      //Serial.println(ledon);
+      caratteri=temper+" "+luce+ " "+char(ledon);  
+      txDISPLAY(0,2);
       break;
     }
+    digitalWrite(led_pin_rx,LOW);
+    vw_rx_start();
   } 
 }
-
-long ir_decode(decode_results *results){
-  long keyLongNumber = results->value;  // get the long number
-  return keyLongNumber;
-}
-
+////////////////////////////////
+// RADIO -> locale
+////////////////////////////////
 void decodeMessage(){
-  // de-cifratura
   byte m=0;
   cipher();
   for (int n=0; n<4;n++){
@@ -106,9 +119,10 @@ void decodeMessage(){
     m+=2;
   }
 }
-
+////////////////////////////////
+// locale -> RADIO
+////////////////////////////////
 void encodeMessage(){
-  // from struct to byte
   byte m=0;
   for (int n=0; n<4;n++){
     BYTEradio[m]=INTERIlocali[n] & mask;
@@ -118,38 +132,45 @@ void encodeMessage(){
   }
   cipher();
 }
-
+////////////////////////////////
+// cifratura XOR del messaggio
+////////////////////////////////
 void cipher(){
   for (byte n=0;n<8;n++){
     BYTEradio[n]=BYTEradio[n]^CIFR[n];
   }
 }
 
-void testIR(){
+////////////////////////////////
+// decodifica ir
+////////////////////////////////
+long ir_decode(decode_results *results){
+  long keyLongNumber = results->value;
+  return keyLongNumber;
+}
+
+////////////////////////////////
+// controlla se segnale IR
+////////////////////////////////
+void chechForIR(){
+  ///////start check for IR///////
   if (irrecv.decode(&results)) {
-    long key=ir_decode(&results);     
+    long key=ir_decode(&results);
+    ////////start switch////////////
     switch (key){
     case KEY_OK:
-      ///////////////
-      // premuto ok
-      ///////////////
       stampaNc();
-      //
       INTERIlocali[INDIRIZZO]=indirMAESTRO;
       INTERIlocali[DATOa]=NUMcomp;
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
-      //
       encodeMessage();
-      //
-      digitalWrite(led_pin,HIGH);
+      digitalWrite(led_pin_tx,HIGH);
       vw_rx_stop();
       vw_send((uint8_t *)BYTEradio,BYTEStoTX);
       vw_wait_tx();
       vw_rx_start();
-      digitalWrite(led_pin,LOW);
-      //
-      NUMcomp=0;
+      digitalWrite(led_pin_tx,LOW);
       break;
     case KEY_1: scorriNumero(1);break;
     case KEY_2: scorriNumero(2);break;
@@ -161,38 +182,33 @@ void testIR(){
     case KEY_8: scorriNumero(8);break;
     case KEY_9: scorriNumero(9);break;
     case KEY_0: scorriNumero(0);break;
-    case KEY_CLEAR:
-      NUMcomp=0;
-      stampaNc();
-      break;
+    case KEY_CLEAR: NUMcomp=0; pulisciDisplay(0,3,6); break;
     }
-    // ritardo
+    ////////end switch////////////////
     delay(100);
-    // prende nota del tempo
     tempo=millis();
-    // continua a ricevere ir
     irrecv.resume();
   }
-  //
+  /////end check for IR///////////
   if ((millis()-tempo)>5000){
     tempo=millis();
     NUMcomp=0;
+    pulisciDisplay(0,3,6);
   }
-  //
   if (NUMcomp<0){
     NUMcomp=0;
+    pulisciDisplay(0,3,6);
   }
 }
-
-void pulisciMsgindirDISPLAY(){
+////////////////////////////////
+// trasmette al display via radio
+// occorre riempire anche il testo
+////////////////////////////////
+void txDISPLAY(byte colonna, byte riga){
+  // pulisce bytes
   for (byte n=0;n<20;n++){
     BYTEradioindirDISPLAY[n]=0;
   }
-}
-
-void radioindirDISPLAY(byte colonna, byte riga){
-  // pulisce bytes
-  pulisciMsgindirDISPLAY();
   // indirizzo display
   int g=indirMAESTROdisplay;
   // caricamento int su bytes
@@ -217,7 +233,7 @@ void radioindirDISPLAY(byte colonna, byte riga){
     BYTEradioindirDISPLAY[n]=BYTEradioindirDISPLAY[n] ^ CIFR[n];
   }
   // tx via radio
-  digitalWrite(led_pin,HIGH);
+  digitalWrite(led_pin_tx,HIGH);
   vw_rx_stop();
   // cambio di velocita
   vw_setup(VELOCITAhi);
@@ -226,16 +242,17 @@ void radioindirDISPLAY(byte colonna, byte riga){
   // ripristino velocita
   vw_setup(VELOCITAstd);
   vw_rx_start();
-  digitalWrite(led_pin,LOW);
+  digitalWrite(led_pin_tx,LOW);
   // ritardo necessario
-  delay(300);
+  delay(500);
 }
-
+////////////////////////////////
+// stampa numero ricevuto via IR
+////////////////////////////////
 void stampaNc(){
   pulisciDisplay(0,3,6);
-  //
   caratteri=String(NUMcomp);
-  radioindirDISPLAY(0,3);
+  txDISPLAY(0,3);//---->
 }
 
 void pulisciDisplay(byte colonna, byte riga, byte numCaratteri){
@@ -243,7 +260,7 @@ void pulisciDisplay(byte colonna, byte riga, byte numCaratteri){
   for (byte n=1; n<numCaratteri;n++){
     caratteri+=" ";
   }
-  radioindirDISPLAY(colonna,riga);
+  txDISPLAY(colonna,riga);//---->
 }
 
 void scorriNumero(byte aggiungi){

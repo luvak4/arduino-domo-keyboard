@@ -9,11 +9,26 @@ const int receive_pin  = 11;
 const int transmit_pin = 12;
 const int RECV_PIN     = 2; // ir pin
 ////////////////////////////////
-// indirizzi radio
+// indirizzi radio TX
 ////////////////////////////////
-#define indirMAESTRO        1234 //tx
-#define indirMAESTROdisplay 1236 //tx
-#define indirCANTINA        1235 //rx
+#define MASTRdisplay  100 // info to display
+#define MASTRa        101 // get value luce/temp/rele
+#define MASTRb        102 // set temp (soglia) up   +10
+#define MASTRc        103 // set temp (soglia) down -10
+#define MASTRd        104 // set luce (soglia a) up +5
+#define MASTRe        105 // set luce (soglia a) dn -5
+#define MASTRf        106 // set luce (soglia b) up +50
+#define MASTRg        107 // set luce (soglia b) dn -50
+#define MASTRh        108 // get soglie
+#define MASTRi        109 // set AGC delay up +100
+#define MASTRj        110 // set AGC delay dn -100
+#define MASTRh        111 // get AGC delay
+////////////////////////////////
+// indirizzi radio RX
+////////////////////////////////
+#define CANTIa       1000 // get value luce/temp/rele
+#define CANTIb       1001 // get soglie luce/temp
+#define CANTIc       1002 // get AGC delay
 ////////////////////////////////
 // trasmissione radio a display
 ////////////////////////////////
@@ -94,7 +109,7 @@ void loop(){
     digitalWrite(led_pin_rx,HIGH);
     decodeMessage();
     switch (INTERIlocali[INDIRIZZO]){
-    case indirCANTINA:
+    case CANTIa:
       String temper=String(INTERIlocali[DATOb]);
       String luce=String(INTERIlocali[DATOa]);
       bool ledon=INTERIlocali[DATOc];
@@ -160,7 +175,7 @@ void chechForIR(){
     switch (key){
     case KEY_OK:
       stampaNc();
-      INTERIlocali[INDIRIZZO]=indirMAESTRO;
+      INTERIlocali[INDIRIZZO]=MASTRa;
       INTERIlocali[DATOa]=NUMcomp;
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
@@ -211,7 +226,7 @@ void txDISPLAY(byte colonna, byte riga){
     BYTEradioindirDISPLAY[n]=0;
   }
   // indirizzo display
-  int g=indirMAESTROdisplay;
+  int g=MASTRdisplay;
   // caricamento int su bytes
   BYTEradioindirDISPLAY[0]=g & mask;
   g=g >> 8;

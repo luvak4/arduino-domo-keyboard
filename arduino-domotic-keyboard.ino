@@ -89,6 +89,10 @@ byte CIFR[]={223,205,228,240,43,146,241,//
 int NUMcomp=0;
 bool IRricevuto=false;
 byte cinqueSec=0;
+unsigned long tempo;
+byte decimi;
+byte secondi;
+byte minuti;
 ////////////////////////////////
 // setup
 ////////////////////////////////
@@ -119,7 +123,7 @@ void loop(){
 	cinqueSec++;
 	if (cinqueSec>4){
 	  IRricevuto=false;
-	  cinqueSec00;
+	  cinqueSec=0;
 	  NUMcomp=0;
 	  stampaNc();
 	}
@@ -199,7 +203,7 @@ void cipher(){
 ////////////////////////////////
 // decodifica ir
 ////////////////////////////////
-long ir_decode(decode_irX *irX){
+long ir_decode(decode_results *irX){
   long keyLongNumber = irX->value;
   return keyLongNumber;
 }
@@ -239,8 +243,8 @@ void chechForIR(){
     case KEY_9: scorriNumero(9);break;
     case KEY_0: scorriNumero(0);break;
     case KEY_CLEAR: NUMcomp=0; stampaNc(); break;
-    case KEY_UP: break;
-    case KEY_DN: break;      
+    //case KEY_UP: break;
+    //case KEY_DN: break;      
     }
     ////////end switch////////////////    
     IRricevuto=true;

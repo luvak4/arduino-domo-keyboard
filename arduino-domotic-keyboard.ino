@@ -10,7 +10,6 @@ const int pin_ir  =  2; // ir pin
 // indirizzi radio TX
 ////////////////////////////////
 #define MASTRdisplay  100 // info to display
-//
 #define MASTRa 101 // get luce/temp/rele <--(CANTIa)
 #define MASTRb 102 // !- set temp (soglia) up   +10
 #define MASTRc 103 // !- set temp (soglia) down -10
@@ -29,11 +28,13 @@ const int pin_ir  =  2; // ir pin
 ////////////////////////////////
 // indirizzi radio RX
 ////////////////////////////////
-#define CANTIok 1000 // get ok
-#define CANTIa  1001 // get value luce/temp/rele
-#define CANTIb  1002 // get soglie luce/temp
-#define CANTIc  1003 // get AGC 
-#define CANTId  1004 // get temp/luce STATO/tempo
+#define CANTIa   1000 // get value luce/temp/rele
+#define CANTIb   1001 // get soglie luce/temp
+#define CANTIc   1002 // get AGC 
+#define CANTId   1003 // get temp/luce STATO/tempo
+#define CANTIokA 1004 // get ok salva eprom
+#define CANTIokB 1005 // get ok carica eprom
+#define CANTIokC 1006 // get ok carica default
 ////////////////////////////////
 // trasmissione radio a display
 ////////////////////////////////
@@ -46,12 +47,37 @@ const int pin_ir  =  2; // ir pin
 #define VELOCITAhi          2000
 //
 byte    BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
-String  caratteri;
+String  CARATTERI;
+////////////////////////////////
+// LCM
+////////////////////////////////
+// caratteri personalizzati
+#define SIMBluce  0
+#define SIMBtermo 1
+#define SIMBlivB  2
+#define SIMBlivC  3
+#define SIMBlivD  4
+#define SIMBlivE  5
+#define SIMBlivF  6
+#define SIMBgiu   7
+// caratteri interni
+#define SIMBsu    B01011110
+#define SIMBlivA  B01011111
+#define SIMBon    B01101111
+#define SIMBoff   B10100101
+////////////////////////////////
+// STATI
+////////////////////////////////
+#define SALITA              1
+#define DISCESA             0
+#define PORTACHIUSA         0
+#define PORTAAPERTA         1
+#define LUCECORRIDOIOACCESA 2
 ////////////////////////////////
 // comunicazione radio principale
 ////////////////////////////////
 #define VELOCITAstd   500
-#define INDIRIZZO       0
+#define MESSnum         0
 #define DATOa           1
 #define DATOb           2
 #define DATOc           3
@@ -72,8 +98,8 @@ uint8_t buflen = BYTEStoTX; //for rx
 #define KEY_8    -1395652082
 #define KEY_9      497848941
 #define KEY_0    -1975719008
-#define KEY_UP   -1395652082
-#define KEY_DN     497848941
+#define KEY_UP          9999
+#define KEY_DN          9998
 #define KEY_OK   -1812574087
 #define KEY_CLEAR -477592334
 IRrecv irrecv(pin_ir); // ir initialize library
@@ -109,6 +135,7 @@ void setup()
 // loop
 ////////////////////////////////
 void loop(){
+  char buf[4]
   ////////////////////////////////
   // tieni il tempo
   ////////////////////////////////
@@ -119,6 +146,8 @@ void loop(){
     ////end   ogni decimo///////////    
     if (decimi>9){
       ////begin ogni secondo//////////
+      //
+      //--dopo 5 sec azzera composizione--
       if (IRricevuto){
 	cinqueSec++;
 	if (cinqueSec>4){
@@ -151,15 +180,101 @@ void loop(){
     if (vw_get_message(BYTEradio, &buflen)){
       vw_rx_stop();
       decodeMessage();
-      switch (INTERIlocali[INDIRIZZO]){
+      switch (INTERIlocali[MESSnum]){
+      case CANTIokA:
+	break;
+      case CANTIokB:
+	break;
+      case CANTIokC:
+	break;	
       case CANTIa:
-	String temper=String(INTERIlocali[DATOb]);
-	String luce=String(INTERIlocali[DATOa]);
-	bool ledon=INTERIlocali[DATOc];
-	caratteri=temper+" "+luce+ " "+char(ledon);  
+	////////////////////////////////
+	// --------------------
+	//                     
+	// 1000 100 20 600 
+	// ^  13  _  10       
+	// L 1001   T 2129 x     <<<<<<<
+	// --------------------
+	////////////////////////////////
+	sprintf(buf, "%4d",INTERIlocali[DATOb]);
+	CARATTERI  = char(SIMBluce)  + " " + buf + "   ";
+	sprintf(buf, "%4d",INTERIlocali[DATOa]);  
+	CARATTERI += char(SIMBtermo) + " " + buf;	
+	if (INTERIlocali[DATOc]>0){
+	  CARATTERI += " " + char(SIMBon); 
+	} else {
+	  CARATTERI += " " + char(SIMBoff); 	  
+	}	 
+	txDISPLAY(0,3);
+	break;
+      case CANTIb:
+	// --------------------
+	//                     
+	// XXXX 100 20 600    <<<<<<<
+	// ^  13  _  10              
+	// L 1001   T2129
+	// --------------------
+	////////////////////////////////
+	sprintf(buf, "%3d",INTERIlocali[DATOa]);
+	CARATTERI   = buf + " ";
+	sprintf(buf, "%2d",INTERIlocali[DATOb]);
+	CARATTERI  += buf + " ";
+	sprintf(buf, "%3d",INTERIlocali[DATOc]);
+	CARATTERI  += buf;
+	txDISPLAY(5,1);
+	break;
+      case CANTIc:
+	/////agc delay//////////////////
+	// --------------------
+	//                     
+	// 1000 XXX XX XXX     <<<<     
+	// ^  13  _  10       
+	// L 1001   T2129
+	// --------------------
+	////////////////////////////////
+	sprintf(buf, "%4d",INTERIlocali[DATOa]);
+	CARATTERI  = buf;
+	txDISPLAY(0,1);
+	break;
+      case CANTId:
+	////stato tempo di luce e temp//
+	// --------------------
+	//                     
+	// 1000 100 20 600 
+	// ^  13  _  10       <<<<<<<
+	// L 1001   T2129
+	// --------------------
+	////////////////////////////////
+	byte stTemp;
+	byte stLuce;
+	INTtoBYTE(INTERIlocali[DATOa],stTemp,stLuce);
+	//
+	sprintf(buf, "%4d",INTERIlocali[DATOb]);  
+	switch(stTemp){
+	case SALITA:
+	  CARATTERI  = char(SIMBsu);
+	  break;
+	case DISCESA:
+	  CARATTERI  = char(SIMBgiu); 
+	  break;
+	}
+	CARATTERI += buf + "   ";
+	//
+	sprintf(buf, "%4d",INTERIlocali[DATOc]);  
+	switch(stLuce){
+	case PORTACHIUSA:
+	  caratteri+= char(SIMBlivA);
+	  break;
+	case PORTAAPERTA:
+	  caratteri+= char(SIMBlivD);	  
+	  break;
+	case LUCECORRIDOIOACCESA:
+	  caratteri+= char(SIMBlivF);	  
+	  break;	  
+	}
+	CARATTERI += buf;
 	txDISPLAY(0,2);
 	break;
-	
       }
       vw_rx_start();
     } 
@@ -222,7 +337,7 @@ void chechForIR(){
       // invia il numero composto
       ////////////////////////////////
       stampaNc();
-      INTERIlocali[INDIRIZZO]=MASTRa;
+      INTERIlocali[MESSnum]=MASTRa;
       INTERIlocali[DATOa]=NUMcomp;
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
@@ -243,8 +358,8 @@ void chechForIR(){
     case KEY_9: scorriNumero(9);break;
     case KEY_0: scorriNumero(0);break;
     case KEY_CLEAR: NUMcomp=0; stampaNc(); break;
-    //case KEY_UP: break;
-    //case KEY_DN: break;      
+    case KEY_UP: break;
+    case KEY_DN: break;      
     }
     ////////end switch////////////////    
     IRricevuto=true;
@@ -272,14 +387,14 @@ void txDISPLAY(byte colonna, byte riga){
   BYTEradioindirDISPLAY[2]=colonna;
   BYTEradioindirDISPLAY[3]=riga;
   // caricamento lunghezza testo su bytes
-  BYTEradioindirDISPLAY[4]=caratteri.length();
+  BYTEradioindirDISPLAY[4]=CARATTERI.length();
   // la lunghezza deve essere non superiore a 20
   if (BYTEradioindirDISPLAY[4]>20){
     BYTEradioindirDISPLAY[4]=20;
   }
   // caricamento messaggio su bytes
   for (byte n=5;n<BYTEradioindirDISPLAY[4]+5;n++){
-    BYTEradioindirDISPLAY[n]=caratteri[n-5];
+    BYTEradioindirDISPLAY[n]=CARATTERI[n-5];
   }
   // cifratura
   for (byte n=0; n<27;n++){
@@ -301,7 +416,7 @@ void txDISPLAY(byte colonna, byte riga){
 void stampaNc(){
   char buf[5];
   sprintf(buf, "%5d",NUMcomp);  
-  caratteri=buf;
+  CARATTERI=buf;
   txDISPLAY(0,3);//---->
 }
 ////////////////////////////////

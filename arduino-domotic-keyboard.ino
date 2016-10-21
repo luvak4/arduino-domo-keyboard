@@ -51,7 +51,7 @@ String  CARATTERI;
 ////////////////////////////////
 // LCM
 ////////////////////////////////
-// caratteri personalizzati
+// CARATTERI personalizzati
 #define SIMBluce  0
 #define SIMBtermo 1
 #define SIMBlivB  2
@@ -60,7 +60,7 @@ String  CARATTERI;
 #define SIMBlivE  5
 #define SIMBlivF  6
 #define SIMBgiu   7
-// caratteri interni
+// CARATTERI interni
 #define SIMBsu    B01011110
 #define SIMBlivA  B01011111
 #define SIMBon    B01101111
@@ -135,7 +135,7 @@ void setup()
 // loop
 ////////////////////////////////
 void loop(){
-  char buf[4]
+  char buf[4];
   ////////////////////////////////
   // tieni il tempo
   ////////////////////////////////
@@ -197,9 +197,9 @@ void loop(){
 	// --------------------
 	////////////////////////////////
 	sprintf(buf, "%4d",INTERIlocali[DATOb]);
-	CARATTERI  = char(SIMBluce)  + " " + buf + "   ";
+	CARATTERI  = String(char(SIMBluce))  + " " + buf + "   ";
 	sprintf(buf, "%4d",INTERIlocali[DATOa]);  
-	CARATTERI += char(SIMBtermo) + " " + buf;	
+	CARATTERI += String(char(SIMBtermo)) + " " + buf;	
 	if (INTERIlocali[DATOc]>0){
 	  CARATTERI += " " + char(SIMBon); 
 	} else {
@@ -216,9 +216,9 @@ void loop(){
 	// --------------------
 	////////////////////////////////
 	sprintf(buf, "%3d",INTERIlocali[DATOa]);
-	CARATTERI   = buf + " ";
+	CARATTERI   = String(buf) + " ";
 	sprintf(buf, "%2d",INTERIlocali[DATOb]);
-	CARATTERI  += buf + " ";
+	CARATTERI  += String(buf) + " ";
 	sprintf(buf, "%3d",INTERIlocali[DATOc]);
 	CARATTERI  += buf;
 	txDISPLAY(5,1);
@@ -258,18 +258,18 @@ void loop(){
 	  CARATTERI  = char(SIMBgiu); 
 	  break;
 	}
-	CARATTERI += buf + "   ";
+	CARATTERI += String(buf) + "   ";
 	//
 	sprintf(buf, "%4d",INTERIlocali[DATOc]);  
 	switch(stLuce){
 	case PORTACHIUSA:
-	  caratteri+= char(SIMBlivA);
+	  CARATTERI += String(char(SIMBlivA));
 	  break;
 	case PORTAAPERTA:
-	  caratteri+= char(SIMBlivD);	  
+	  CARATTERI+= char(SIMBlivD);	  
 	  break;
 	case LUCECORRIDOIOACCESA:
-	  caratteri+= char(SIMBlivF);	  
+	  CARATTERI+= char(SIMBlivF);	  
 	  break;	  
 	}
 	CARATTERI += buf;
@@ -428,4 +428,12 @@ void scorriNumero(byte aggiungi){
     NUMcomp=0;
   }  
   stampaNc();
+}
+////////////////////////////////
+// conversione da intero a due bytes
+////////////////////////////////
+void INTtoBYTE(int x, byte& lsb, byte& msb){
+  lsb =x & 0x00FF;
+  x = x >> 8;
+  msb = x & 0x00FF;
 }

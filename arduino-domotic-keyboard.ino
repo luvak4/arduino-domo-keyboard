@@ -21,9 +21,9 @@ const int pin_ir  =  2; // ir pin
 #define MASTRi 109 // !- set AGC delay up +100
 #define MASTRj 110 // !- set AGC delay dn -100
 #define MASTRk 111 // !---> AGC delay    <--(CANTIc)
-#define MASTRl 112 // >>> salva  EEPROM  <--(CANTIok)
-#define MASTRm 113 // >>> carica EEPROM  <--(CANTIok)
-#define MASTRn 114 // >>> carica DEFAULT <--(CANTIok)
+#define MASTRl 112 // >>> salva  EEPROM  <--(CANTIokA)
+#define MASTRm 113 // >>> carica EEPROM  <--(CANTIokB)
+#define MASTRn 114 // >>> carica DEFAULT <--(CANTIokC)
 #define MASTRo 115 // get temp/luce STATO/tempo
 ////////////////////////////////
 // indirizzi radio RX

@@ -1,3 +1,6 @@
+////////////////////////////////
+// KEYBOARD
+////////////////////////////////
 #include <IRremote.h> 
 #include <VirtualWire.h>
 ////////////////////////////////
@@ -18,8 +21,8 @@ const int pin_ir  =  2; // ir pin
 #define MASTRf 106 // !- set luce (soglia b) up +50 <--(CANTIb)
 #define MASTRg 107 // !- set luce (soglia b) dn -50 <--(CANTIb)
 #define MASTRh 108 // !---> get soglie   <--(CANTIb)
-#define MASTRi 109 // !- set AGC delay up +100 <--(CANTIc)
-#define MASTRj 110 // !- set AGC delay dn -100 <--(CANTIc)
+#define MASTRi 109 // !- set AGC delay up +300 <--(CANTIc)
+#define MASTRj 110 // !- set AGC delay dn -300 <--(CANTIc)
 #define MASTRk 111 // !---> AGC delay    <--(CANTIc)
 #define MASTRl 112 // >>> salva  EEPROM  <--(CANTIokA)
 #define MASTRm 113 // >>> carica EEPROM  <--(CANTIokB)
@@ -39,6 +42,17 @@ const int pin_ir  =  2; // ir pin
 #define CANTIokB 1005 // get ok carica eprom
 #define CANTIokC 1006 // get ok carica default
 ////////////////////////////////
+// indirizzi radio RX RITRASMESSI
+////////////////////////////////
+#define MARITR_CANTIa   11000 // get value luce/temp/rele
+#define MARITR_CANTIb   11001 // get soglie luce/temp
+#define MARITR_CANTIc   11002 // get AGC 
+#define MARITR_CANTId   11003 // get temp/luce STATO/tempo
+#define MARITR_CANTIokA 11004 // get ok salva eprom
+#define MARITR_CANTIokB 11005 // get ok carica eprom
+#define MARITR_CANTIokC 11006 // get ok carica default
+
+////////////////////////////////
 // trasmissione radio a display
 ////////////////////////////////
 #define DISPLAYindirizzoLSB    0
@@ -55,19 +69,20 @@ String  CARATTERI;
 // LCM
 ////////////////////////////////
 // CARATTERI personalizzati
-#define SIMBluce  0
-#define SIMBtermo 1
-#define SIMBlivB  2
-#define SIMBlivC  3
-#define SIMBlivD  4
-#define SIMBlivE  5
-#define SIMBlivF  6
-#define SIMBgiu   7
+#define SIMBluce  1 //0 -> incrementato x problemi con String
+#define SIMBtermo 2 //1
+#define SIMBlivB  3 //2
+#define SIMBlivC  4 //3
+#define SIMBlivD  5 //4
+#define SIMBlivE  6 //5
+#define SIMBlivF  7 //6
+#define SIMBgiu   8 //7
 // CARATTERI interni
 #define SIMBsu    B01011110
 #define SIMBlivA  B01011111
-#define SIMBon    B01101111
-#define SIMBoff   B10100101
+#define SIMBon    255
+#define SIMBoff   252
+
 ////////////////////////////////
 // STATI
 ////////////////////////////////
@@ -116,8 +131,8 @@ byte CIFR[]={223,205,228,240,43,146,241,//
 	     138,239,200,179,222,231,212};
 #define mask 0x00FF
 int NUMcomp=0;
-bool IRricevuto=false;
-byte cinqueSec=0;
+//byte IRricevuto=0;
+//byte cinqueSec=0;
 unsigned long tempo;
 byte decimi;
 byte secondi;
@@ -132,7 +147,7 @@ void setup()
   vw_setup(VELOCITAstd);       
   vw_rx_start();               
   irrecv.enableIRIn();
-  Serial.begin(9600);
+  //Serial.begin(9600);
 }
 ////////////////////////////////
 // loop
@@ -150,16 +165,12 @@ void loop(){
     if (decimi>9){
       ////begin ogni secondo//////////
       //
-      //--dopo 5 sec azzera composizione--
-      if (IRricevuto){
-	cinqueSec++;
-	if (cinqueSec>4){
-	  IRricevuto=false;
-	  cinqueSec=0;
-	  NUMcomp=0;
-	  stampaNc();
-	}
-      }
+      //IRricevuto-=1;
+      //if (IRricevuto==0){
+      //  NUMcomp=0;
+      //  stampaNc();
+      //}
+      
       ////end   ogni secondo//////////          
       decimi=0;
       secondi++;
@@ -183,6 +194,11 @@ void loop(){
     if (vw_get_message(BYTEradio, &buflen)){
       vw_rx_stop();
       decodeMessage();
+      //delay(500);
+      ritrasmette();
+      // recupero agc ricevitore display
+      // che viene assordato dalla ritrasmissione
+      //delay(500);
       switch (INTERIlocali[MESSnum]){
       case CANTIokA:
 	break;
@@ -199,15 +215,27 @@ void loop(){
 	// L 1001   T 2129 x     <<<<<<<
 	// --------------------
 	////////////////////////////////
+  /*
 	sprintf(buf, "%4d",INTERIlocali[DATOb]);
-	CARATTERI  = String(char(SIMBluce))  + " " + buf + "   ";
+	CARATTERI  = char(SIMBluce)  + " " + buf + "   ";
 	sprintf(buf, "%4d",INTERIlocali[DATOa]);  
-	CARATTERI += String(char(SIMBtermo)) + " " + buf;	
-	if (INTERIlocali[DATOc]>0){
-	  CARATTERI += " " + char(SIMBon); 
-	} else {
-	  CARATTERI += " " + char(SIMBoff); 	  
-	}	 
+	CARATTERI += char(SIMBtermo)) + " " + buf;	
+ */
+ //char tt=SIMBluce;
+ CARATTERI=char(SIMBtermo);
+ sprintf(buf, "%4d",INTERIlocali[DATOb]);
+ CARATTERI+=String(buf);
+ CARATTERI+=char(SIMBluce);
+ sprintf(buf, "%4d",INTERIlocali[DATOa]);
+ CARATTERI+=String(buf);
+  if (INTERIlocali[DATOc]>0){
+    CARATTERI += char(SIMBon); 
+  } else {
+    CARATTERI += char(SIMBoff);     
+  }  
+ 
+ //CARATTERI+="a";
+ //Serial.println(CARATTERI);
 	txDISPLAY(0,3);
 	break;
       case CANTIb:
@@ -283,6 +311,30 @@ void loop(){
     } 
   }
 }
+
+void ritrasmette(){
+  // =====
+  // ritrasmette i messaggi ricevuti 
+  // cambiando id ma mantenendo i dati ricevuti
+  // =======
+  int ss =INTERIlocali[MESSnum];
+  int da =INTERIlocali[DATOa];
+  int db =INTERIlocali[DATOb];
+  int dc =INTERIlocali[DATOc];
+  int mm = ss+10000;
+  INTERIlocali[MESSnum]=mm;
+      encodeMessage();
+      vw_rx_stop();
+      vw_send((uint8_t *)BYTEradio,BYTEStoTX);
+      vw_wait_tx();
+      vw_rx_start();
+  INTERIlocali[MESSnum]=ss;
+  INTERIlocali[DATOa]=da;
+  INTERIlocali[DATOb]=db;
+  INTERIlocali[DATOc]=dc;
+  delay(100);
+}
+
 ////////////////////////////////
 // RADIO -> locale
 ////////////////////////////////
@@ -340,8 +392,8 @@ void chechForIR(){
       // invia il numero composto
       ////////////////////////////////
       stampaNc();
-      INTERIlocali[MESSnum]=MASTRa;
-      INTERIlocali[DATOa]=NUMcomp;
+      INTERIlocali[MESSnum]=NUMcomp;
+      INTERIlocali[DATOa]=0;
       INTERIlocali[DATOb]=0;
       INTERIlocali[DATOc]=0;
       encodeMessage();
@@ -365,7 +417,7 @@ void chechForIR(){
     case KEY_DN: break;      
     }
     ////////end switch////////////////    
-    IRricevuto=true;
+    //IRricevuto=5; // 5 secondi to clear
     delay(100);
     irrecv.resume();
   }
@@ -417,10 +469,13 @@ void txDISPLAY(byte colonna, byte riga){
 // stampa numero ricevuto via IR
 ////////////////////////////////
 void stampaNc(){
-  char buf[5];
-  sprintf(buf, "%5d",NUMcomp);  
-  CARATTERI=buf;
-  txDISPLAY(0,3);//---->
+  //char buf[5];
+  //sprintf(buf, "%5d",NUMcomp); 
+  //CARATTERI="     ";
+  //txDISPLAY(10,0);//---->
+  //delay(300);
+  CARATTERI=String(NUMcomp);
+  txDISPLAY(10,0);//---->
 }
 ////////////////////////////////
 // viene composto il numero

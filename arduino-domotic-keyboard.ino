@@ -1,49 +1,38 @@
 ////////////////////////////////
-// KEYBOARD
+// TASTIERA
 ////////////////////////////////
+/*
+  	      	+-----------+
+  	      	|           |
+                |           |         
+         IR --->| 2         |
+                |           |
+   radio rx --->| 11     12 |---> radio tx
+  		|           |
+  		+-----------+
+                   ARDUINO
+                  ATMEGA 328
+*/
+
+/*
+* configurazioni
+*/
 #include <IRremote.h> 
 #include <VirtualWire.h>
-////////////////////////////////
-// pins
-////////////////////////////////
+/*
+** pins
+*/
 const int pin_rx  = 11;
 const int pin_tx  = 12;
 const int pin_ir  =  2; // ir pin
-////////////////////////////////
-// indirizzi radio TX
-////////////////////////////////
+/*
+** messaggi (OUT)
+*/
 #define MASTRdisplay  100 // info to display
-#define MASTRa 101 // get luce/temp/rele <--(CANTIa)
-#define MASTRb 102 // !- set temp (soglia) up   +10 <--(CANTIb)
-#define MASTRc 103 // !- set temp (soglia) down -10 <--(CANTIb)
-#define MASTRd 104 // !- set luce (soglia a) up +5  <--(CANTIb)
-#define MASTRe 105 // !- set luce (soglia a) dn -5  <--(CANTIb)
-#define MASTRf 106 // !- set luce (soglia b) up +50 <--(CANTIb)
-#define MASTRg 107 // !- set luce (soglia b) dn -50 <--(CANTIb)
-#define MASTRh 108 // !---> get soglie   <--(CANTIb)
-#define MASTRi 109 // !- set AGC delay up +300 <--(CANTIc)
-#define MASTRj 110 // !- set AGC delay dn -300 <--(CANTIc)
-#define MASTRk 111 // !---> AGC delay    <--(CANTIc)
-#define MASTRl 112 // >>> salva  EEPROM  <--(CANTIokA)
-#define MASTRm 113 // >>> carica EEPROM  <--(CANTIokB)
-#define MASTRn 114 // >>> carica DEFAULT <--(CANTIokC)
-#define MASTRo 115 // get temp/luce STATO/tempo
-#define MASTRp 116 // rele ON     <-- (CANTIa)
-#define MASTRq 117 // rele OFF    <-- (CANTIa)
-#define MASTRr 118 // rele toggle <-- (CANTIa)
-////////////////////////////////
-// indirizzi radio RX
-////////////////////////////////
-#define CANTIa   1000 // get value luce/temp/rele
-#define CANTIb   1001 // get soglie luce/temp
-#define CANTIc   1002 // get AGC 
-#define CANTId   1003 // get temp/luce STATO/tempo
-#define CANTIokA 1004 // get ok salva eprom
-#define CANTIokB 1005 // get ok carica eprom
-#define CANTIokC 1006 // get ok carica default
-////////////////////////////////
-// indirizzi radio RX RITRASMESSI
-////////////////////////////////
+/*
+**** risposte ritrasmesse
+*/
+#define kRITRASMISSIONE 10000 // valore sommato alle risposte
 #define MARITR_CANTIa   11000 // get value luce/temp/rele
 #define MARITR_CANTIb   11001 // get soglie luce/temp
 #define MARITR_CANTIc   11002 // get AGC 
@@ -51,10 +40,43 @@ const int pin_ir  =  2; // ir pin
 #define MARITR_CANTIokA 11004 // get ok salva eprom
 #define MARITR_CANTIokB 11005 // get ok carica eprom
 #define MARITR_CANTIokC 11006 // get ok carica default
-
-////////////////////////////////
-// trasmissione radio a display
-////////////////////////////////
+/*
+** domande (OUT)
+*/
+#define MASTRa 101 // get luce/temp/rele               (CANTIa)
+#define MASTRb 102 // !- set temp (soglia) up   +10    (CANTIb)
+#define MASTRc 103 // !- set temp (soglorgia) down -10  (CANTIb)
+#define MASTRd 104 // !- set luce (soglia a) up +5     (CANTIb)
+#define MASTRe 105 // !- set luce (soglia a) dn -5     (CANTIb)
+#define MASTRf 106 // !- set luce (soglia b) up +50    (CANTIb)
+#define MASTRg 107 // !- set luce (soglia b) dn -50    (CANTIb)
+#define MASTRh 108 // !---> get soglie                 (CANTIb)
+#define MASTRi 109 // !- set AGC delay up +300         (CANTIc)
+#define MASTRj 110 // !- set AGC delay dn -300         (CANTIc)
+#define MASTRk 111 // !---> AGC delay                  (CANTIc)
+#define MASTRl 112 // >>> salva  EEPROM                (CANTIokA)
+#define MASTRm 113 // >>> carica EEPROM                (CANTIokB)
+#define MASTRn 114 // >>> carica DEFAULT               (CANTIokC)
+#define MASTRo 115 // get temp/luce STATO/tempo        (CANTId)
+#define MASTRp 116 // rele ON                          (CANTIa)
+#define MASTRq 117 // rele OFF                         (CANTIa)
+#define MASTRr 118 // rele toggle                      (CANTIa)
+/*
+** risposte (IN)
+*/
+#define CANTIa   1000 // get value luce/temp/rele
+#define CANTIb   1001 // get soglie luce/temp
+#define CANTIc   1002 // get AGC 
+#define CANTId   1003 // get temp/luce STATO/tempo
+#define CANTIokA 1004 // get ok salva eprom
+#define CANTIokB 1005 // get ok carica eprom
+#define CANTIokC 1006 // get ok carica default
+/*
+** LCM
+*/
+byte    BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
+String  CARATTERI;
+// trasmissione radio 
 #define DISPLAYindirizzoLSB    0
 #define DISPLAYindirizzoMSB    1
 #define DISPLAYcolonna         2
@@ -62,12 +84,6 @@ const int pin_ir  =  2; // ir pin
 #define DISPLAYnCaratteri      4
 #define DISPLAYinizioTesto     5
 #define VELOCITAhi          2000
-//
-byte    BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
-String  CARATTERI;
-////////////////////////////////
-// LCM
-////////////////////////////////
 // CARATTERI personalizzati
 #define SIMBluce  1 //0 -> incrementato x problemi con String
 #define SIMBtermo 2 //1
@@ -77,23 +93,24 @@ String  CARATTERI;
 #define SIMBlivE  6 //5
 #define SIMBlivF  7 //6
 #define SIMBgiu   8 //7
-// CARATTERI interni
+// CARATTERI interni (cambiano secondo il display)
 #define SIMBsu    B01011110
 #define SIMBlivA  B01011111
 #define SIMBon    255
 #define SIMBoff   252
-
-////////////////////////////////
-// STATI
-////////////////////////////////
+/*
+** stati
+*/
 #define SALITA              1
 #define DISCESA             0
-#define PORTACHIUSA         0
-#define PORTAAPERTA         1
-#define LUCECORRIDOIOACCESA 2
-////////////////////////////////
-// comunicazione radio principale
-////////////////////////////////
+#define LUCEpoca            0
+#define LUCEmedia           1
+#define LUCEtanta           2
+#define RELEon              1
+#define RELEoff             0
+/*
+** comunicazione radio principale
+*/
 #define VELOCITAstd   500
 #define MESSnum         0
 #define DATOa           1
@@ -103,9 +120,9 @@ String  CARATTERI;
 int     INTERIlocali[4]={0,0,0,0};
 byte    BYTEradio[BYTEStoTX];
 uint8_t buflen = BYTEStoTX; //for rx
-////////////////////////////////
-// ricezione via infrarossi
-////////////////////////////////
+/*
+** rx infrarossi IR
+*/
 #define KEY_1     -983386969
 #define KEY_2    -1519975698
 #define KEY_3     1007641363
@@ -122,24 +139,22 @@ uint8_t buflen = BYTEStoTX; //for rx
 #define KEY_CLEAR -477592334
 IRrecv irrecv(pin_ir); // ir initialize library
 decode_results irX;    // ir variable
-////////////////////////////////
-// varie
-////////////////////////////////
+/*
+** varie
+*/
 byte CIFR[]={223,205,228,240,43,146,241,//
 	     87,213,48,235,131,6,81,26,//
 	     70,34,74,224,27,111,150,22,//
 	     138,239,200,179,222,231,212};
 #define mask 0x00FF
 int NUMcomp=0;
-//byte IRricevuto=0;
-//byte cinqueSec=0;
 unsigned long tempo;
 byte decimi;
 byte secondi;
 byte minuti;
-////////////////////////////////
-// setup
-////////////////////////////////
+/*
+* setup
+*/
 void setup()
 {
   vw_set_tx_pin(pin_tx); 
@@ -149,34 +164,32 @@ void setup()
   irrecv.enableIRIn();
   //Serial.begin(9600);
 }
-////////////////////////////////
-// loop
-////////////////////////////////
+/*
+* loop()
+*/
 void loop(){
   char buf[4];
-  ////////////////////////////////
-  // tieni il tempo
-  ////////////////////////////////
+/*
+** tieni il tempo
+*/
   if ((abs(millis()-tempo))>100){
     tempo=millis();
     decimi++;
-    ////begin ogni decimo///////////
-    ////end   ogni decimo///////////    
+    //BEGIN ogni decimo
+    //END   ogni decimo
     if (decimi>9){
-      ////begin ogni secondo//////////
-      //
+      //BEGIN ogni secondo
       //IRricevuto-=1;
       //if (IRricevuto==0){
       //  NUMcomp=0;
       //  stampaNc();
       //}
-      
-      ////end   ogni secondo//////////          
+      //END ogni secondo
       decimi=0;
       secondi++;
       if (secondi>59){
-	////begin ogni minuto //////////
-	////end   ogni minuto //////////          	
+	//BEGIN ogni minuto
+	//END   ogni minuto
 	secondi=0;
 	minuti++;
 	if (minuti>250){
@@ -184,21 +197,17 @@ void loop(){
 	}
       }
     }
-    ////////////////////////////////
-    // IR
-    ////////////////////////////////
+/*
+** IR
+*/
     chechForIR();
-    ////////////////////////////////
-    // radio rx
-    ////////////////////////////////
+/*
+** radio rx
+*/
     if (vw_get_message(BYTEradio, &buflen)){
       vw_rx_stop();
       decodeMessage();
-      //delay(500);
       ritrasmette();
-      // recupero agc ricevitore display
-      // che viene assordato dalla ritrasmissione
-      //delay(500);
       switch (INTERIlocali[MESSnum]){
       case CANTIokA:
 	break;
@@ -207,6 +216,9 @@ void loop(){
       case CANTIokC:
 	break;	
       case CANTIa:
+/*
+*** CANTIa
+*/
 	////////////////////////////////
 	// --------------------
 	//                     
@@ -215,30 +227,33 @@ void loop(){
 	// L 1001   T 2129 x     <<<<<<<
 	// --------------------
 	////////////////////////////////
-  /*
+	/*
+	  sprintf(buf, "%4d",INTERIlocali[DATOb]);
+	  CARATTERI  = char(SIMBluce)  + " " + buf + "   ";
+	  sprintf(buf, "%4d",INTERIlocali[DATOa]);  
+	  CARATTERI += char(SIMBtermo)) + " " + buf;	
+	*/
+	//char tt=SIMBluce;
+	CARATTERI=char(SIMBtermo);
 	sprintf(buf, "%4d",INTERIlocali[DATOb]);
-	CARATTERI  = char(SIMBluce)  + " " + buf + "   ";
-	sprintf(buf, "%4d",INTERIlocali[DATOa]);  
-	CARATTERI += char(SIMBtermo)) + " " + buf;	
- */
- //char tt=SIMBluce;
- CARATTERI=char(SIMBtermo);
- sprintf(buf, "%4d",INTERIlocali[DATOb]);
- CARATTERI+=String(buf);
- CARATTERI+=char(SIMBluce);
- sprintf(buf, "%4d",INTERIlocali[DATOa]);
- CARATTERI+=String(buf);
-  if (INTERIlocali[DATOc]>0){
-    CARATTERI += char(SIMBon); 
-  } else {
-    CARATTERI += char(SIMBoff);     
-  }  
- 
- //CARATTERI+="a";
- //Serial.println(CARATTERI);
+	CARATTERI+=String(buf);
+	CARATTERI+=char(SIMBluce);
+	sprintf(buf, "%4d",INTERIlocali[DATOa]);
+	CARATTERI+=String(buf);
+	if (INTERIlocali[DATOc]>0){
+	  CARATTERI += char(SIMBon); 
+	} else {
+	  CARATTERI += char(SIMBoff);     
+	}  
+
+	//CARATTERI+="a";
+	//Serial.println(CARATTERI);
 	txDISPLAY(0,3);
 	break;
       case CANTIb:
+/*
+*** CANTIb
+*/
 	// --------------------
 	//                     
 	// XXXX 100 20 600    <<<<<<<
@@ -255,6 +270,9 @@ void loop(){
 	txDISPLAY(5,1);
 	break;
       case CANTIc:
+/*
+*** CANTIc
+*/
 	/////agc delay//////////////////
 	// --------------------
 	//                     
@@ -268,6 +286,9 @@ void loop(){
 	txDISPLAY(0,1);
 	break;
       case CANTId:
+/*
+*** CANTId
+*/
 	////stato tempo di luce e temp//
 	// --------------------
 	//                     
@@ -293,13 +314,13 @@ void loop(){
 	//
 	sprintf(buf, "%4d",INTERIlocali[DATOc]);  
 	switch(stLuce){
-	case PORTACHIUSA:
+	case LUCEpoca:
 	  CARATTERI += String(char(SIMBlivA));
 	  break;
-	case PORTAAPERTA:
+	case :
 	  CARATTERI+= char(SIMBlivD);	  
 	  break;
-	case LUCECORRIDOIOACCESA:
+	case LUCEon:
 	  CARATTERI+= char(SIMBlivF);	  
 	  break;	  
 	}
@@ -307,11 +328,15 @@ void loop(){
 	txDISPLAY(0,2);
 	break;
       }
+      //
       vw_rx_start();
     } 
   }
 }
 
+/*
+* ritrasmette()
+*/
 void ritrasmette(){
   // =====
   // ritrasmette i messaggi ricevuti 
@@ -323,18 +348,20 @@ void ritrasmette(){
   int dc =INTERIlocali[DATOc];
   int mm = ss+10000;
   INTERIlocali[MESSnum]=mm;
-      encodeMessage();
-      vw_rx_stop();
-      vw_send((uint8_t *)BYTEradio,BYTEStoTX);
-      vw_wait_tx();
-      vw_rx_start();
+  encodeMessage();
+  vw_rx_stop();
+  vw_send((uint8_t *)BYTEradio,BYTEStoTX);
+  vw_wait_tx();
+  vw_rx_start();
   INTERIlocali[MESSnum]=ss;
   INTERIlocali[DATOa]=da;
   INTERIlocali[DATOb]=db;
   INTERIlocali[DATOc]=dc;
   delay(100);
 }
-
+/*
+* decodeMessage()
+*/
 ////////////////////////////////
 // RADIO -> locale
 ////////////////////////////////
@@ -348,6 +375,9 @@ void decodeMessage(){
     m+=2;
   }
 }
+/*
+* encodeMessage()
+*/
 ////////////////////////////////
 // locale -> RADIO
 ////////////////////////////////
@@ -361,6 +391,9 @@ void encodeMessage(){
   }
   cipher();
 }
+/*
+* cipher()
+*/
 ////////////////////////////////
 // cifratura XOR del messaggio
 ////////////////////////////////
@@ -369,7 +402,9 @@ void cipher(){
     BYTEradio[n]=BYTEradio[n]^CIFR[n];
   }
 }
-
+/*
+* ir_decode()
+*/
 ////////////////////////////////
 // decodifica ir
 ////////////////////////////////
@@ -377,7 +412,9 @@ long ir_decode(decode_results *irX){
   long keyLongNumber = irX->value;
   return keyLongNumber;
 }
-
+/*
+* chechForIR()
+*/
 ////////////////////////////////
 // controlla se segnale IR
 ////////////////////////////////
@@ -423,6 +460,9 @@ void chechForIR(){
   }
   /////end check for IR///////////
 }
+/*
+* txDISPLAY()
+*/
 ////////////////////////////////
 // trasmette al display via radio
 // occorre riempire anche il testo
@@ -465,6 +505,9 @@ void txDISPLAY(byte colonna, byte riga){
   vw_setup(VELOCITAstd);
   vw_rx_start();
 }
+/*
+* stampaNc()
+*/
 ////////////////////////////////
 // stampa numero ricevuto via IR
 ////////////////////////////////
@@ -477,6 +520,9 @@ void stampaNc(){
   CARATTERI=String(NUMcomp);
   txDISPLAY(10,0);//---->
 }
+/*
+* scorriNumero()
+*/
 ////////////////////////////////
 // viene composto il numero
 ////////////////////////////////
@@ -487,6 +533,9 @@ void scorriNumero(byte aggiungi){
   }  
   stampaNc();
 }
+/*
+* INTtoBYTE()
+*/
 ////////////////////////////////
 // conversione da intero a due bytes
 ////////////////////////////////

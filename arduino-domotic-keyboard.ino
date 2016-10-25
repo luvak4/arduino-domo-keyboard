@@ -14,18 +14,18 @@
                   ATMEGA 328
 */
 
-/*
+/*////////////////////////////////
 * configurazioni
-*/
+*/////////////////////////////////
 #include <IRremote.h> 
 #include <VirtualWire.h>
-/*
+/*--------------------------------
 ** pins
 */
 const int pin_rx  = 11;
 const int pin_tx  = 12;
 const int pin_ir  =  2; // ir pin
-/*
+/*--------------------------------
 ** messaggi (OUT)
 */
 #define MASTRdisplay  100 // info to display
@@ -40,7 +40,7 @@ const int pin_ir  =  2; // ir pin
 #define MARITR_CANTIokA 11004 // get ok salva eprom
 #define MARITR_CANTIokB 11005 // get ok carica eprom
 #define MARITR_CANTIokC 11006 // get ok carica default
-/*
+/*--------------------------------
 ** domande (OUT)
 */
 #define MASTRa 101 // get luce/temp/rele               (CANTIa)
@@ -61,7 +61,7 @@ const int pin_ir  =  2; // ir pin
 #define MASTRp 116 // rele ON                          (CANTIa)
 #define MASTRq 117 // rele OFF                         (CANTIa)
 #define MASTRr 118 // rele toggle                      (CANTIa)
-/*
+/*--------------------------------
 ** risposte (IN)
 */
 #define CANTIa   1000 // get value luce/temp/rele
@@ -71,7 +71,7 @@ const int pin_ir  =  2; // ir pin
 #define CANTIokA 1004 // get ok salva eprom
 #define CANTIokB 1005 // get ok carica eprom
 #define CANTIokC 1006 // get ok carica default
-/*
+/*--------------------------------
 ** LCM
 */
 byte    BYTEradioindirDISPLAY[VW_MAX_MESSAGE_LEN];
@@ -98,7 +98,7 @@ String  CARATTERI;
 #define SIMBlivA  B01011111
 #define SIMBon    255
 #define SIMBoff   252
-/*
+/*--------------------------------
 ** stati
 */
 #define SALITA              1
@@ -108,7 +108,7 @@ String  CARATTERI;
 #define LUCEtanta           2
 #define RELEon              1
 #define RELEoff             0
-/*
+/*--------------------------------
 ** comunicazione radio principale
 */
 #define VELOCITAstd   500
@@ -120,7 +120,7 @@ String  CARATTERI;
 int     INTERIlocali[4]={0,0,0,0};
 byte    BYTEradio[BYTEStoTX];
 uint8_t buflen = BYTEStoTX; //for rx
-/*
+/*--------------------------------
 ** rx infrarossi IR
 */
 #define KEY_1     -983386969
@@ -139,7 +139,7 @@ uint8_t buflen = BYTEStoTX; //for rx
 #define KEY_CLEAR -477592334
 IRrecv irrecv(pin_ir); // ir initialize library
 decode_results irX;    // ir variable
-/*
+/*--------------------------------
 ** varie
 */
 byte CIFR[]={223,205,228,240,43,146,241,//
@@ -152,7 +152,7 @@ unsigned long tempo;
 byte decimi;
 byte secondi;
 byte minuti;
-/*
+/*////////////////////////////////
 * setup
 */
 void setup()
@@ -164,7 +164,7 @@ void setup()
   irrecv.enableIRIn();
   //Serial.begin(9600);
 }
-/*
+/*////////////////////////////////
 * loop()
 */
 void loop(){
@@ -197,11 +197,11 @@ void loop(){
 	}
       }
     }
-/*
+/*--------------------------------
 ** IR
 */
     chechForIR();
-/*
+/*--------------------------------
 ** radio rx
 */
     if (vw_get_message(BYTEradio, &buflen)){
@@ -216,7 +216,7 @@ void loop(){
       case CANTIokC:
 	break;	
       case CANTIa:
-/*
+/*--------------------------------
 *** CANTIa
 */
 	////////////////////////////////
@@ -251,7 +251,7 @@ void loop(){
 	txDISPLAY(0,3);
 	break;
       case CANTIb:
-/*
+/*--------------------------------
 *** CANTIb
 */
 	// --------------------
@@ -270,7 +270,7 @@ void loop(){
 	txDISPLAY(5,1);
 	break;
       case CANTIc:
-/*
+/*--------------------------------
 *** CANTIc
 */
 	/////agc delay//////////////////
@@ -286,7 +286,7 @@ void loop(){
 	txDISPLAY(0,1);
 	break;
       case CANTId:
-/*
+/*--------------------------------
 *** CANTId
 */
 	////stato tempo di luce e temp//
@@ -334,7 +334,7 @@ void loop(){
   }
 }
 
-/*
+/*--------------------------------
 * ritrasmette()
 */
 void ritrasmette(){
@@ -359,12 +359,11 @@ void ritrasmette(){
   INTERIlocali[DATOc]=dc;
   delay(100);
 }
-/*
+/*--------------------------------
 * decodeMessage()
 */
-////////////////////////////////
 // RADIO -> locale
-////////////////////////////////
+//
 void decodeMessage(){
   byte m=0;
   cipher();
@@ -375,12 +374,11 @@ void decodeMessage(){
     m+=2;
   }
 }
-/*
+/*--------------------------------
 * encodeMessage()
 */
-////////////////////////////////
 // locale -> RADIO
-////////////////////////////////
+//
 void encodeMessage(){
   byte m=0;
   for (int n=0; n<4;n++){
@@ -391,33 +389,30 @@ void encodeMessage(){
   }
   cipher();
 }
-/*
+/*--------------------------------
 * cipher()
 */
-////////////////////////////////
 // cifratura XOR del messaggio
-////////////////////////////////
+//
 void cipher(){
   for (byte n=0;n<8;n++){
     BYTEradio[n]=BYTEradio[n]^CIFR[n];
   }
 }
-/*
+/*--------------------------------
 * ir_decode()
 */
-////////////////////////////////
 // decodifica ir
-////////////////////////////////
+//
 long ir_decode(decode_results *irX){
   long keyLongNumber = irX->value;
   return keyLongNumber;
 }
-/*
+/*--------------------------------
 * chechForIR()
 */
-////////////////////////////////
 // controlla se segnale IR
-////////////////////////////////
+//
 void chechForIR(){
   ///////start check for IR///////
   if (irrecv.decode(&irX)) {
@@ -460,13 +455,12 @@ void chechForIR(){
   }
   /////end check for IR///////////
 }
-/*
+/*--------------------------------
 * txDISPLAY()
 */
-////////////////////////////////
 // trasmette al display via radio
 // occorre riempire anche il testo
-////////////////////////////////
+//
 void txDISPLAY(byte colonna, byte riga){
   // pulisce bytes-radio
   for (byte n=0;n<20;n++){
@@ -505,12 +499,11 @@ void txDISPLAY(byte colonna, byte riga){
   vw_setup(VELOCITAstd);
   vw_rx_start();
 }
-/*
+/*--------------------------------
 * stampaNc()
 */
-////////////////////////////////
 // stampa numero ricevuto via IR
-////////////////////////////////
+//
 void stampaNc(){
   //char buf[5];
   //sprintf(buf, "%5d",NUMcomp); 
@@ -520,12 +513,11 @@ void stampaNc(){
   CARATTERI=String(NUMcomp);
   txDISPLAY(10,0);//---->
 }
-/*
+/*--------------------------------
 * scorriNumero()
 */
-////////////////////////////////
 // viene composto il numero
-////////////////////////////////
+//
 void scorriNumero(byte aggiungi){
   NUMcomp=NUMcomp*10+aggiungi;
   if (NUMcomp<0){
@@ -533,12 +525,11 @@ void scorriNumero(byte aggiungi){
   }  
   stampaNc();
 }
-/*
+/*--------------------------------
 * INTtoBYTE()
 */
-////////////////////////////////
 // conversione da intero a due bytes
-////////////////////////////////
+//
 void INTtoBYTE(int x, byte& lsb, byte& msb){
   lsb =x & 0x00FF;
   x = x >> 8;
